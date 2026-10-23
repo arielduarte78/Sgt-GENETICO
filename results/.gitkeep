@@ -1,0 +1,2 @@
+# Este directorio almacena las salidas de ejecuciones: results/runs/<run_id>/
+# Los datos pesados de corridas son ignorados por git (salvo manifest.json).

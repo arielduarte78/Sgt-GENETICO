@@ -1,0 +1,56 @@
+# ==============================================================================
+# Configuración de Ejemplo para Búsqueda de Plantillas (Kuramoto Model)
+# ==============================================================================
+# Referencias: Plan de Diseño del GA (Secciones 3, 4, 5, 6)
+
+# Identificación y reproducibilidad
+experiment_name: "c4_deformation_sweep_m8"
+seed: 42
+
+# Parámetros del Evaluador SDP (Sección 4)
+evaluator:
+  solver: "Clarabel"           # Solvers soportados: Clarabel, MOSEK
+  tol_feas: 1.0e-10            # Tolerancia de convergencia interna
+  tol_opt: 1.0e-10
+  epsilon: 1.0e-6              # Margen espectral objetivo para deflación Q^T L_w Q >= eps*I
+  epsilon_c: 1.0e-4            # Margen mínimo de estabilidad intra-cluster c_a >= eps_c
+  theta_tol: 1.0e-4            # Tolerancia angular para residuo de equilibrio F_a
+  cache_precision: 1.0e-10     # Redondeo de clave para memoización determinista
+
+# Parámetros del Genotipo y Espacio de Búsqueda (Sección 3)
+genotype:
+  m_min: 2
+  m_max: 10
+  k_ref_grid: [4, 8, 12, 16]
+  x_min: 1.0e-3                # Cota inferior para simplex abierto de tamaños x_a
+  ell_min: -6.0                # Rango de escala log10 para desvíos de fase
+  ell_max: -0.5
+
+# Estructura del Algoritmo Genético (Sección 6)
+algorithm:
+  islands: 8                   # 1 isla por núcleo de cómputo
+  migration_period: 25         # Migración en anillo cada N generaciones
+  migrants_per_island: 2
+  mu_pop: 64                   # Tamaño de población parental por isla
+  lambda_children: 128         # Descendientes generados por generación
+  tournament_size: 3
+  elitism: 4                   # Individuos élite conservados por isla
+  hall_of_fame_size: 200       # Archivo global de soluciones prometedoras
+  max_generations: 500
+
+# Probabilidades de Operadores de Variación (Sección 5)
+operators:
+  p_gaussian_u: 0.30           # Gaussiana multiescala sobre log-tamaños
+  p_phase_offset: 0.25         # Mutación de magnitud de desvío ell
+  p_anchor_jump: 0.05          # Salto discreto de ancla k_a mod Kref
+  p_split: 0.10                # Bisección de cluster preservando baricentro
+  p_merge: 0.10                # Fusión de clusters cercanos circularmente
+  p_crossover: 0.25            # Cruce independiente por apareamiento circular
+  p_sign_flip: 0.15            # Inversión de signo sigma en operador de desvío
+  p_kref_change: 0.20          # Cambio de grilla Kref en salto de ancla
+
+# Búsqueda Local Memética
+local_search:
+  enabled: true
+  top_quantile: 0.05           # Aplicado al 5% superior
+  evals_per_individual: 30     # Presupuesto de (1+1)-ES con regla de 1/5
