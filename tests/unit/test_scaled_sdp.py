@@ -12,26 +12,22 @@ T7: Edge cases: m=2, single sheet, all singleton sheets (NOT_SCALABLE), phi near
 from __future__ import annotations
 
 import math
+
 import numpy as np
-import pytest
 import scipy.linalg
 
+from kuramoto_templates.cases.s7 import get_s7_appendix_a_template, get_s7_template
+from kuramoto_templates.domain.conditions import (
+    build_lw_matrix,
+)
 from kuramoto_templates.evaluators.config import EvalConfig
 from kuramoto_templates.evaluators.scaled import (
     ScaledSDPEvaluator,
-    compute_sheets,
-    compute_h_eff,
     build_scaled_basis_t,
-    build_g_hat_basis,
+    compute_h_eff,
+    compute_sheets,
 )
-from kuramoto_templates.domain.conditions import (
-    build_lw_matrix,
-    build_m_matrix,
-    get_pair_indices,
-    p_matrix_to_vector,
-)
-from kuramoto_templates.cases.s7 import get_s7_appendix_a_template, get_s7_template
-from kuramoto_templates.search.genome import Genome, canonicalize, decode_x, decode_phi
+from kuramoto_templates.search.genome import Genome, decode_phi, decode_x
 
 
 def test_t2_base_t_properties_and_coverage() -> None:
@@ -199,3 +195,139 @@ def test_t5_antidoping_id_39260_scaled() -> None:
     res = ev_scaled.evaluate_phase1(x, phi)
     assert res.f is not None
     assert res.f < 0.0, f"ID 39260 debió dar f < 0, dio {res.f}"
+
+
+def test_t4_solver_agreement_improvement() -> None:
+    """T4: Mejora de acuerdo entre solvers (>= 100x).
+
+    Qué valida:
+        En S7 (h=0.002, t=0, mu_t=0.690), compara el desacuerdo relativo de lam
+        entre Clarabel(1e-8), Clarabel(1e-9) y SCS(1e-8) en el evaluador plano
+        frente al evaluador escalado.
+        Exige una mejora de acuerdo relativo de al menos 100x.
+    """
+    from kuramoto_templates.evaluators.sdp import SDPEvaluator
+
+    tmpl = get_s7_appendix_a_template(h=0.002, t=0.0)
+
+    # 1. Plain
+    lams_plain = {}
+    for key, (s_name, tol) in [
+        ("CL8", ("CLARABEL", 1e-8)),
+        ("CL9", ("CLARABEL", 1e-9)),
+        ("SCS", ("SCS", 1e-8)),
+    ]:
+        ev_p = SDPEvaluator(EvalConfig(mu_t=0.690, solver_name=s_name, solver_tol=tol))
+        res_p = ev_p.evaluate_phase1(tmpl.x, tmpl.phi)
+        assert res_p.lam is not None
+        lams_plain[key] = res_p.lam
+
+    diff_plain = max(
+        abs(lams_plain["CL8"] - lams_plain["CL9"]),
+        abs(lams_plain["CL8"] - lams_plain["SCS"]),
+    )
+    rel_diff_plain = diff_plain / abs(lams_plain["CL8"])
+
+    # 2. Scaled
+    lams_scaled = {}
+    for key, (s_name, tol) in [
+        ("CL8", ("CLARABEL", 1e-8)),
+        ("CL9", ("CLARABEL", 1e-9)),
+        ("SCS", ("SCS", 1e-8)),
+    ]:
+        ev_s = ScaledSDPEvaluator(EvalConfig(mu_t=0.690, solver_name=s_name, solver_tol=tol))
+        res_s = ev_s.evaluate_phase1(tmpl.x, tmpl.phi)
+        assert res_s.lam is not None
+        lams_scaled[key] = res_s.lam
+
+    diff_scaled = max(
+        abs(lams_scaled["CL8"] - lams_scaled["CL9"]),
+        abs(lams_scaled["CL8"] - lams_scaled["SCS"]),
+    )
+    rel_diff_scaled = diff_scaled / abs(lams_scaled["CL8"])
+
+    ratio = rel_diff_plain / rel_diff_scaled
+    print(
+        f"\n[T4 RATIO]: {ratio:.2f}x (rel_plain={rel_diff_plain:.6e}, "
+        f"rel_scaled={rel_diff_scaled:.6e})"
+    )
+    assert ratio >= 100.0, f"Mejora de acuerdo {ratio:.2f}x menor al objetivo 100x"
+
+
+def test_t3_scaling_law_results_file() -> None:
+    """T3: Ley de escala del paso 0b guardada en results/s7_scaling_law.json.
+
+    Qué valida:
+        1. results/s7_scaling_law.json existe y contiene las curvas para t in {0.0, 0.01, 0.05}.
+        2. El exponente log-log para t=0.0 es ~3.0 (en [2.90, 3.10]).
+        3. El exponente log-log para t=0.05 es ~2.0 (en [2.00, 2.30]).
+        4. Todos los lambda_min(M) son estrictamente positivos.
+    """
+    import json
+    from pathlib import Path
+
+    file_path = (
+        Path(__file__).resolve().parent.parent.parent
+        / "results"
+        / "s7_scaling_law.json"
+    )
+    assert file_path.exists(), f"Falta archivo {file_path}"
+
+    with file_path.open("r", encoding="utf-8") as f:
+        data = json.load(f)
+
+    assert "exponents" in data
+    exp_0 = data["exponents"]["0.0"]
+    exp_05 = data["exponents"]["0.05"]
+
+    assert 2.90 <= exp_0 <= 3.10, f"Exponente en t=0.0 debe ser ~3, dio {exp_0}"
+    assert 2.00 <= exp_05 <= 2.30, f"Exponente en t=0.05 debe ser ~2, dio {exp_05}"
+
+    # Positividad estricta
+    for _t_str, curve in data["curves"].items():
+        for pt in curve:
+            assert pt["lam_min_numpy"] > 0.0
+            assert pt["lam_min_mpmath"] > 0.0
+
+
+def test_t8_sdpevaluator_and_domain_untouched() -> None:
+    """T8 Regresión: SDPEvaluator y domain/ no se modificaron."""
+    import subprocess
+
+    diff_targets = [
+        "src/kuramoto_templates/domain/",
+        "src/kuramoto_templates/evaluators/sdp.py",
+    ]
+    res = subprocess.run(
+        ["git", "diff", *diff_targets],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    msg = f"git diff en domain/ y sdp.py debe estar vacío, pero dio:\n{res.stdout}"
+    assert res.stdout.strip() == "", msg
+
+
+def test_genome_sheet_assignment_vs_fallback() -> None:
+    """Valida que la asignación por genoma use anclas k y compara con respaldo."""
+    from kuramoto_templates.evaluators.scaled import compute_sheets
+
+    # Genoma C4 con 4 clusters en anclas (0, 1, 2, 3) y desvíos pequeños
+    g = Genome(
+        m=4,
+        K_ref=4,
+        k=(0, 1, 2, 3),
+        sgn=(1, 1, 1, 1),
+        ell=(-3.0, -3.0, -3.0, -3.0),
+        u=(0.0, 0.0, 0.0, 0.0),
+    )
+    x = decode_x(g.u)
+    phi = decode_phi(g.K_ref, g.k, g.sgn, g.ell)
+
+    sheets_g, ref_g = compute_sheets(x, phi, genome=g)
+    sheets_fb, ref_fb = compute_sheets(x, phi, genome=None)
+
+    assert sheets_g == sheets_fb
+
+
+

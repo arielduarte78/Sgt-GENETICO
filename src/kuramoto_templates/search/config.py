@@ -31,6 +31,7 @@ class GAConfig:
     seed: int = 42
     num_workers: int = 1
     checkpoint_interval: int = 5
+    evaluator: str = "plain"
     operator_probs: dict[str, float] = field(
         default_factory=lambda: {
             "gauss_u": 0.25,
@@ -44,6 +45,8 @@ class GAConfig:
 
     def __post_init__(self) -> None:
         """Validate parameter bounds."""
+        if self.evaluator not in ("plain", "scaled"):
+            raise ValueError(f"evaluator must be 'plain' or 'scaled', got '{self.evaluator}'.")
         if not (self.fitness_noise >= 0.0):
             raise ValueError(f"fitness_noise must be non-negative, got {self.fitness_noise}.")
         if not (self.tol > 0.0):

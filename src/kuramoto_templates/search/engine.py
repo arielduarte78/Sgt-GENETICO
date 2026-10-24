@@ -123,17 +123,21 @@ class GAEngine:
         self.allow_dirty = allow_dirty
         self.no_seeds = no_seeds or not config.use_seeds
         self.no_split_merge = no_split_merge or not config.allow_split_merge
-
         self.evaluator_fn = evaluator_fn
+
         if self.evaluator_fn is None:
-            sdp_eval = SDPEvaluator(
-                EvalConfig(
-                    mu_t=config.mu_t,
-                    solver_tol=config.tol,
-                    lam_floor=config.lam_floor,
-                )
+            eval_cfg = EvalConfig(
+                mu_t=config.mu_t,
+                solver_tol=config.tol,
+                lam_floor=config.lam_floor,
             )
-            self._eval_func: EvaluatorFunc = sdp_eval.evaluate_phase1
+            if getattr(config, "evaluator", "plain") == "scaled":
+                from kuramoto_templates.evaluators.scaled import ScaledSDPEvaluator
+
+                eval_inst: Any = ScaledSDPEvaluator(eval_cfg)
+            else:
+                eval_inst = SDPEvaluator(eval_cfg)
+            self._eval_func = eval_inst.evaluate_phase1
         else:
             self._eval_func = self.evaluator_fn
 
@@ -210,7 +214,10 @@ class GAEngine:
             eval_time = float(entry["eval_time"])
         else:
             t0 = time.perf_counter()
-            res = self._eval_func(x, phi)
+            try:
+                res = self._eval_func(x, phi, genome=genome)  # type: ignore[call-arg]
+            except TypeError:
+                res = self._eval_func(x, phi)
             eval_time = time.perf_counter() - t0
 
             s_star = float(res.s) if res.s is not None else 0.0
