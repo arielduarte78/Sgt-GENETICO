@@ -6,7 +6,7 @@
     "delta": 0.0009997297064442264,
     "tau": 0.0,
     "optimal_inaccurate": 0,
-    "solve_time": 0.01919530000031955
+    "solve_time": 0.014417499999581196
   },
   {
     "eps": 0.0001,
@@ -15,7 +15,7 @@
     "delta": -1.0,
     "tau": -1.0,
     "optimal_inaccurate": 0,
-    "solve_time": 0.013470900000356778
+    "solve_time": 0.014612400000260095
   },
   {
     "eps": 1e-05,
@@ -24,7 +24,7 @@
     "delta": 9.729705743287233e-06,
     "tau": 0.0,
     "optimal_inaccurate": 0,
-    "solve_time": 0.015287799999896379
+    "solve_time": 0.015563699999802338
   },
   {
     "eps": 1e-06,
@@ -33,7 +33,7 @@
     "delta": 6.44093779047953e-07,
     "tau": 2.9165110212366034e-17,
     "optimal_inaccurate": 1,
-    "solve_time": 0.015513600000303995
+    "solve_time": 0.015288100000361737
   },
   {
     "eps": 1e-07,
@@ -42,7 +42,7 @@
     "delta": 0.0,
     "tau": 0.0,
     "optimal_inaccurate": 1,
-    "solve_time": 0.02154340000015509
+    "solve_time": 0.01813809999930527
   },
   {
     "eps": 1e-08,
@@ -51,7 +51,7 @@
     "delta": 0.0,
     "tau": 3.0255153848926618e-19,
     "optimal_inaccurate": 1,
-    "solve_time": 0.025058700000045064
+    "solve_time": 0.02368579999983922
   },
   {
     "eps": 1e-09,
@@ -60,7 +60,7 @@
     "delta": -1.0,
     "tau": -1.0,
     "optimal_inaccurate": 0,
-    "solve_time": 0.015669100000195613
+    "solve_time": 0.012500599999839324
   },
   {
     "eps": 1e-10,
@@ -69,6 +69,6 @@
     "delta": -1.0,
     "tau": -1.0,
     "optimal_inaccurate": 0,
-    "solve_time": 0.019919600000321225
+    "solve_time": 0.012463000000025204
   }
 ]
