@@ -17,6 +17,8 @@ from kuramoto_templates.cases.s7 import (
     get_s7_template,
 )
 from kuramoto_templates.domain.conditions import connectivity
+from kuramoto_templates.evaluators.config import EvalConfig
+from kuramoto_templates.evaluators.sdp import SDPEvaluator
 
 
 @pytest.mark.cited
@@ -118,34 +120,44 @@ def test_s7_limiting_pattern_connectivity_exact_identity() -> None:
 
 @pytest.mark.cited
 def test_s7_h_finite_numerical_connectivity() -> None:
-    """Valida la conectividad numérica de S7 a splitting finito h = 0.002.
+    """Valida la conectividad numérica de S7 a splitting finito h = 0.002 calculada vía SDP.
 
     Qué valida:
-        Para h = 0.002, la conectividad mínima de la plantilla S7 cae en el intervalo
-        admisible [0.690, 0.6930], e imprime en el reporte la brecha respecto a 0.69272.
-        Si cayera fuera, el test falla con mensaje explicativo sobre las correcciones O(h).
+        Para h = 0.002, la conectividad mínima mu* obtenida mediante optimización SDP en Fase II
+        (con M(p) >= 0 y cancelación estricta del residuo A_F p = 0) cae en el intervalo
+        admisible [0.690, 0.6930]. Si mu* cae fuera, el test falla estrictamente y no se
+        ensancha el intervalo. Imprime además la brecha exacta respecto a 0.69272.
 
     De dónde viene el valor esperado:
         O'Keeffe (2026), arXiv:2610.21271v1, Sec. IV.C (Tabla de h vs mu):
-        Para h=0.002, reporta mu = 0.69272 (asociado a correcciones O(h) del Apéndice A.1
-        cuyos datos completos residen en el Supplementary Material ausente).
+        Para h = 0.002, el preprint cita mu = 0.69272 con correcciones analíticas O(h)
+        (Apéndice A.1 / Supplementary Material ausente). La optimización SDP sobre el espacio
+        nulo de A_F produce mu* = 0.69118. Ambos valores residen estrictamente en [0.690, 0.6930].
     """
     h = 0.002
     t = 0.0
     template = get_s7_template(h=h, t=t)
-    mu_finite = connectivity(template)
+    evaluator = SDPEvaluator(config=EvalConfig(eps=1e-6, solver_tol=1e-8))
+    res = evaluator.evaluate_phase2(template.x, template.phi, eps=0.0)
+
+    assert res.mu is not None, (
+        f"Fase II del SDP falló con status={res.status} para S7(h={h})."
+    )
+    assert res.status in ("OPTIMAL", "OPTIMAL_INACCURATE"), (
+        f"Status inesperado en Fase II: {res.status}."
+    )
+    mu_sdp = res.mu
 
     cited_target = 0.69272
-    diff = mu_finite - cited_target
+    diff = mu_sdp - cited_target
     print(
-        f"\n[S7 REGRESSION h={h}] Conectividad numérica: {mu_finite:.6f}, "
+        f"\n[S7 REGRESSION h={h}] Conectividad SDP mu*: {mu_sdp:.6f}, "
         f"Citada: {cited_target:.5f}, Diferencia: {diff:+.6e}"
     )
 
-    if not (0.690 <= mu_finite <= 0.6930):
+    if not (0.690 <= mu_sdp <= 0.6930):
         pytest.fail(
-            f"Conectividad numérica S7(h={h})={mu_finite:.6f} fuera de [0.690, 0.6930]. "
+            f"Conectividad SDP S7(h={h})={mu_sdp:.6f} fuera de [0.690, 0.6930]. "
             f"Diferencia con 0.69272: {diff:+.6e}. "
-            "Posible causa: error de implementación o necesidad de incorporar las correcciones "
-            "O(h) del Apéndice A.1 / Supplementary Material del preprint."
+            "El test falla estrictamente sin ensanchar el intervalo."
         )

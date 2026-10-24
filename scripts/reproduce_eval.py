@@ -170,9 +170,12 @@ def run_reproduce_eval() -> dict[str, Any]:
     mu_limit_gap = abs(mu_limit - mu_limit_theory)
 
     s7_finite = get_s7_template(h=0.002, t=0.0)
-    mu_finite = connectivity(s7_finite)
+    mu_finite_static = connectivity(s7_finite)
+    evaluator_s7 = SDPEvaluator(config=EvalConfig(eps=1e-6, solver_tol=1e-8))
+    res_s7_sdp = evaluator_s7.evaluate_phase2(s7_finite.x, s7_finite.phi, eps=0.0)
+    mu_finite_sdp = res_s7_sdp.mu if res_s7_sdp.mu is not None else float("nan")
     s7_target = 0.69272
-    s7_gap = mu_finite - s7_target
+    s7_gap = mu_finite_sdp - s7_target
 
     report["results"]["suite_c"] = {
         "canale_status": {
@@ -195,11 +198,12 @@ def run_reproduce_eval() -> dict[str, Any]:
             "passed": bool(mu_limit_gap < 1e-12),
         },
         "s7_finite_h_0_002": {
-            "mu_obtained": mu_finite,
+            "mu_sdp_obtained": mu_finite_sdp,
+            "mu_static_table2": mu_finite_static,
             "mu_cited_target": s7_target,
-            "gap": s7_gap,
-            "in_interval_0690_0693": bool(0.690 <= mu_finite <= 0.6930),
-            "passed": bool(0.690 <= mu_finite <= 0.6930),
+            "gap_sdp_vs_target": s7_gap,
+            "in_interval_0690_0693": bool(0.690 <= mu_finite_sdp <= 0.6930),
+            "passed": bool(0.690 <= mu_finite_sdp <= 0.6930),
         },
     }
     print("  - Canale: XFAIL (justificación registrada en CITATIONS.md)")
@@ -208,7 +212,10 @@ def run_reproduce_eval() -> dict[str, Any]:
         f"w*={w_calc:.10f} (gap: {w_gap:.2e})"
     )
     print(f"  - S7 Límite conectividad: mu={mu_limit:.10f} (gap con fórmula: {mu_limit_gap:.2e})")
-    print(f"  - S7 (h=0.002): mu={mu_finite:.6f} vs citado={s7_target:.5f} (gap: {s7_gap:+.2e})")
+    print(
+        f"  - S7 (h=0.002): mu_sdp={mu_finite_sdp:.6f} vs citado={s7_target:.5f} "
+        f"(gap: {s7_gap:+.2e})"
+    )
 
     # ---------------------------------------------------------
     # 4. SUITE D: Verificación cruzada (Clarabel vs SCS vs Linprog)

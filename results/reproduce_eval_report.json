@@ -1,5 +1,5 @@
 {
-  "timestamp_utc": "2026-10-24T11:40:36Z",
+  "timestamp_utc": "2026-10-24T12:21:17Z",
   "environment": {
     "python_version": "3.12.12 (main, Feb 12 2026, 00:40:26) [MSC v.1944 64 bit (AMD64)]",
     "platform": "Windows-11-10.0.26200-SP0",
@@ -71,9 +71,10 @@
         "passed": true
       },
       "s7_finite_h_0_002": {
-        "mu_obtained": 0.6929077063695863,
+        "mu_sdp_obtained": 0.6911817087490628,
+        "mu_static_table2": 0.6929077063695863,
         "mu_cited_target": 0.69272,
-        "gap": 0.0001877063695863157,
+        "gap_sdp_vs_target": -0.0015382912509371849,
         "in_interval_0690_0693": true,
         "passed": true
       }

@@ -1,0 +1,92 @@
+{
+  "s7_analytical_mu": 0.6929077063695864,
+  "curve": {
+    "0.0001": {
+      "eps": 0.0001,
+      "phase1": {
+        "Phi": 0.997297267891344,
+        "status": "OPTIMAL",
+        "tau": 0.0,
+        "delta": 9.97297267891344e-05,
+        "solve_time": 0.020559200000207056
+      },
+      "phase2": {
+        "mu": null,
+        "status": "INFEASIBLE",
+        "solve_time": 0.023625499999980093,
+        "verification": null
+      }
+    },
+    "1e-05": {
+      "eps": 1e-05,
+      "phase1": {
+        "Phi": 0.9729696520176843,
+        "status": "OPTIMAL",
+        "tau": 0.0,
+        "delta": 9.729696520176843e-06,
+        "solve_time": 0.02298369999971328
+      },
+      "phase2": {
+        "mu": null,
+        "status": "INFEASIBLE",
+        "solve_time": 0.027010400000108348,
+        "verification": null
+      }
+    },
+    "1e-06": {
+      "eps": 1e-06,
+      "phase1": {
+        "Phi": 0.6440940706990551,
+        "status": "OPTIMAL_INACCURATE",
+        "tau": 2.9165110212366034e-17,
+        "delta": 6.44093779047953e-07,
+        "solve_time": 0.019324100000631006
+      },
+      "phase2": {
+        "mu": null,
+        "status": "INFEASIBLE",
+        "solve_time": 0.017006600000058825,
+        "verification": null
+      }
+    },
+    "1e-07": {
+      "eps": 1e-07,
+      "phase1": {
+        "Phi": 0.0,
+        "status": "OPTIMAL_INACCURATE",
+        "tau": 0.0,
+        "delta": 0.0,
+        "solve_time": 0.020003499999802443
+      },
+      "phase2": {
+        "mu": null,
+        "status": "VERIFICATION_FAILED",
+        "solve_time": 0.017371400000229187,
+        "verification": {
+          "max_F": 2.9744545715360005e-10,
+          "min_c": 0.21574740939227766,
+          "min_eig_M": 7.37545381992025e-08,
+          "mu": 0.6556828804304995,
+          "is_valid": false,
+          "reasons": [
+            "Margen espectral insuficiente: lambda_min(M)=7.38e-08 < 1.00e-07"
+          ]
+        }
+      }
+    },
+    "0.0_relaxation": {
+      "eps": 0.0,
+      "phase2": {
+        "mu": 0.6911817087490628,
+        "status": "OPTIMAL",
+        "verification": {
+          "max_F": 1.0226611224517512e-12,
+          "min_c": 0.2157473494231551,
+          "min_eig_M": -1.8938036816093112e-10,
+          "mu": 0.6911817087490628,
+          "is_valid": true
+        }
+      }
+    }
+  }
+}

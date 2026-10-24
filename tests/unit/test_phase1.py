@@ -83,3 +83,47 @@ def test_c4_phase1_rejection_of_stability() -> None:
         f"El evaluador no detectó la degeneración de C4: Phi={res.Phi} esperado ~1.0."
     )
     assert res.Phi <= 1.0 + 1e-6, f"Phi de C4 ({res.Phi}) excede la cota superior unitaria."
+
+
+def test_phase1_strictly_stable_case_achieves_near_zero_phi() -> None:
+    """Valida un caso positivo claro en Fase I con Phi < 1e-6 para un estado estrictamente estable.
+
+    Qué valida:
+        Para un sistema de dos clusters idénticos sincronizados (m=2, x=(0.5, 0.5), phi=(0.0, 0.0)),
+        la Fase I elástica certifica estabilidad estricta devolviendo:
+            - Phi < 1e-6 (en la práctica ~ 1e-12).
+            - Status = "OPTIMAL".
+        Asimismo, la evaluación completa procede a Fase II alcanzando mu* = 1.0 (grafo completo).
+
+    De dónde viene el valor esperado:
+        Construcción analítica exacta:
+        Con m=2 y phi_1 = phi_2 = 0, sin(phi_1 - phi_2) = 0, por lo que F(p) == 0 idénticamente
+        para cualquier p in [0, 1] (tau = 0 exacto).
+        El Laplaciano proyectado con p=1 es M = Q^T L_w Q = 0.5 (autovalor 0.5 >> eps = 1e-6).
+        Por tanto, la restricción LMI M >= (eps - delta) I se satisface holgadamente con delta = 0,
+        y c_a = 0.5 + 0.5 = 1.0 >= eps_c.
+        El objetivo mínimo global es Phi = 0, alcanzando numéricamente Phi < 1e-6 con
+        status OPTIMAL.
+    """
+    x = (0.5, 0.5)
+    phi = (0.0, 0.0)
+    config = EvalConfig(eps=1e-6, eps_c=1e-4, theta_tol=1e-4, solver_tol=1e-10)
+    evaluator = SDPEvaluator(config=config)
+
+    res_p1 = evaluator.evaluate_phase1(x, phi)
+
+    assert res_p1.status == "OPTIMAL", (
+        f"Fase I no devolvió OPTIMAL para caso sincronizado m=2: status={res_p1.status}."
+    )
+    assert res_p1.Phi < 1e-6, (
+        f"Fase I devolvió Phi={res_p1.Phi} >= 1e-6 para un caso estrictamente estable."
+    )
+
+    # Validar que al proceder a Fase II se obtenga el óptimo analítico mu* = 1.0
+    full_res = evaluator.evaluate(x, phi)
+    assert full_res.status == "OPTIMAL"
+    assert full_res.mu is not None
+    assert math.isclose(full_res.mu, 1.0, abs_tol=1e-6), (
+        f"Conectividad óptima {full_res.mu} difiere del valor analítico 1.0."
+    )
+

@@ -63,6 +63,27 @@ class SDPEvaluator(Evaluator):
         """
         return self._solve_phase1(x, phi)
 
+    def evaluate_phase2(
+        self,
+        x: tuple[float, ...],
+        phi: tuple[float, ...],
+        eps: float | None = None,
+    ) -> EvalResult:
+        """Resuelve directamente la Fase II (maximización de mu*) sobre el espacio nulo de A_F.
+
+        Args:
+            x: Tamaños de cluster x_a > 0, sum x_a = 1.
+            phi: Fases de cluster phi_a en (-pi, pi].
+            eps: Margen espectral a exigir (si es None se usa self.config.eps; permite eps=0.0).
+
+        Returns:
+            EvalResult con mu*, matriz P y diagnósticos de verify_solution.
+        """
+        eps_target = self.config.eps if eps is None else eps
+        return self._solve_phase2_core(
+            x, phi, eps=eps_target, phi_phase1=0.0, base_solver_info={}
+        )
+
     def evaluate(self, x: tuple[float, ...], phi: tuple[float, ...]) -> EvalResult:
         """Evalúa un candidato (x, phi) resolviendo Fase I y, si es factible, Fase II.
 
@@ -221,6 +242,23 @@ class SDPEvaluator(Evaluator):
         phi: tuple[float, ...],
         res_phase1: EvalResult,
     ) -> EvalResult:
+        """Invoca la Fase II usando la configuración estándar y metadatos de Fase I."""
+        return self._solve_phase2_core(
+            x,
+            phi,
+            eps=self.config.eps,
+            phi_phase1=res_phase1.Phi,
+            base_solver_info=res_phase1.solver_info,
+        )
+
+    def _solve_phase2_core(
+        self,
+        x: tuple[float, ...],
+        phi: tuple[float, ...],
+        eps: float,
+        phi_phase1: float,
+        base_solver_info: dict[str, float | str | int],
+    ) -> EvalResult:
         """Formula y resuelve la Fase II en cvxpy eliminando F mediante N = null_space(A_F)."""
         x_arr = np.asarray(x, dtype=float)
         phi_arr = np.asarray(phi, dtype=float)
@@ -234,21 +272,19 @@ class SDPEvaluator(Evaluator):
         Q = scipy.linalg.null_space(np.ones((1, m), dtype=float))
         M_basis = build_m_basis(x_arr, phi_arr, Q)
 
-        eps = self.config.eps
         eps_c = self.config.eps_c
 
         N = scipy.linalg.null_space(A_F)
         d = N.shape[1]
         if d == 0:
-            # Espacio nulo trivial, no hay grados de libertad para equilibrio
-            f_penalized = -math.log10(1.0 + max(res_phase1.Phi, 1e-6) / 1e-6)
+            f_penalized = -math.log10(1.0 + max(phi_phase1, 1e-6) / 1e-6)
             return EvalResult(
                 f=f_penalized,
                 mu=None,
-                Phi=res_phase1.Phi,
+                Phi=phi_phase1,
                 P=None,
                 status="NO_NULLSPACE_DEGREES_OF_FREEDOM",
-                solver_info=res_phase1.solver_info,
+                solver_info=base_solver_info,
             )
 
         z = cp.Variable(d)
@@ -275,13 +311,13 @@ class SDPEvaluator(Evaluator):
             raw_status = prob.status
         except Exception as e:
             solve_time = time.perf_counter() - t0
-            f_penalized = -math.log10(1.0 + max(res_phase1.Phi, 1e-6) / 1e-6)
-            info = dict(res_phase1.solver_info)
+            f_penalized = -math.log10(1.0 + max(phi_phase1, 1e-6) / 1e-6)
+            info = dict(base_solver_info)
             info.update({"error_phase2": str(e), "solve_time_phase2": solve_time})
             return EvalResult(
                 f=f_penalized,
                 mu=None,
-                Phi=res_phase1.Phi,
+                Phi=phi_phase1,
                 P=None,
                 status="SOLVER_ERROR_PHASE2",
                 solver_info=info,
@@ -290,7 +326,7 @@ class SDPEvaluator(Evaluator):
         status_norm = raw_status.upper()
         is_optimal = status_norm in ("OPTIMAL", "OPTIMAL_INACCURATE")
 
-        solver_info = dict(res_phase1.solver_info)
+        solver_info = dict(base_solver_info)
         solver_info.update(
             {
                 "solve_time_phase2": solve_time,
@@ -301,11 +337,11 @@ class SDPEvaluator(Evaluator):
         )
 
         if not is_optimal or t_var.value is None or z.value is None:
-            f_penalized = -math.log10(1.0 + max(res_phase1.Phi, 1e-6) / 1e-6)
+            f_penalized = -math.log10(1.0 + max(phi_phase1, 1e-6) / 1e-6)
             return EvalResult(
                 f=f_penalized,
                 mu=None,
-                Phi=res_phase1.Phi,
+                Phi=phi_phase1,
                 P=None,
                 status=status_norm,
                 solver_info=solver_info,
@@ -321,7 +357,7 @@ class SDPEvaluator(Evaluator):
             x_arr,
             phi_arr,
             P_mat,
-            eps=self.config.eps,
+            eps=eps,
             eps_c=self.config.eps_c,
             theta_tol=self.config.theta_tol,
         )
@@ -337,25 +373,24 @@ class SDPEvaluator(Evaluator):
         )
 
         if not verif["is_valid"]:
-            # Falló la verificación independiente: penalizar fitness
-            f_penalized = -math.log10(1.0 + max(res_phase1.Phi, 1e-6) / 1e-6)
+            f_penalized = -math.log10(1.0 + max(phi_phase1, 1e-6) / 1e-6)
             solver_info["verification_reasons"] = "; ".join(verif["reasons"])
             return EvalResult(
                 f=f_penalized,
                 mu=None,
-                Phi=res_phase1.Phi,
+                Phi=phi_phase1,
                 P=P_opt,
                 status="VERIFICATION_FAILED",
                 solver_info=solver_info,
             )
 
-        # Fase I ok, Fase II óptima y verificado: f = mu*
         mu_star = float(verif["mu"])
         return EvalResult(
             f=mu_star,
             mu=mu_star,
-            Phi=res_phase1.Phi,
+            Phi=phi_phase1,
             P=P_opt,
             status=status_norm,
             solver_info=solver_info,
         )
+
