@@ -19,7 +19,7 @@ class EvalConfig:
         eps_c: Cota inferior para la fuerza de estabilidad intra-cluster: c_a(p) >= eps_c.
         theta_tol: Tolerancia máxima permitida en el residuo de equilibrio: |F_a(p)| <= theta_tol.
         phase1_tol: Umbral en Phi de la Fase I para considerar factible e iniciar Fase II.
-        solver_tol: Tolerancia absoluta y relativa configurada para el solver (default 1e-10).
+        solver_tol: Tolerancia absoluta y relativa configurada para el solver (default 1e-8).
         solver_name: Nombre del solver de cvxpy a utilizar ("CLARABEL" o "SCS").
     """
 
@@ -27,7 +27,7 @@ class EvalConfig:
     eps_c: float = 1e-4
     theta_tol: float = 1e-4
     phase1_tol: float = 1e-6
-    solver_tol: float = 1e-10
+    solver_tol: float = 1e-8
     solver_name: str = "CLARABEL"
     mu_t: float = 0.6929077
     rho: float = 1.0
