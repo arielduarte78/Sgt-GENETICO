@@ -96,12 +96,13 @@ def create_s7_direct_seed(h: float = 0.002, t: float = 0.0) -> SeedIndividual:
         s7_template.x,
         s7_template.phi,
         K_ref=4,
+        canonical=False,
     )
     return SeedIndividual(
         genome=genome,
         phenotype_x=s7_template.x,
         phenotype_phi=s7_template.phi,
-        name="S7_direct",
+        name=f"S7_direct_h{h}_t{t}",
         is_direct_injection=True,
     )
 

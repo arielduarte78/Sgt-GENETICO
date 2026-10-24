@@ -14,24 +14,25 @@
     "s7_survived_50_gens": true
   },
   "run_3b_frontier": {
-    "elapsed_seconds": 35.847655399998985,
-    "best_f": -1.0000119395629435e-05,
-    "best_m": 4,
-    "best_lam_hat": -1.1939562943439904e-10,
-    "best_s_star": 3.2112880169487153e-12,
+    "elapsed_seconds": 48.59237120000034,
+    "best_f": -1.0298265754838633e-08,
+    "best_m": 5,
+    "best_h_eff": 0.0014224527449355005,
+    "best_lam_hat": -0.3311790620373117,
+    "best_s_star": 1.0298265754838633e-08,
     "best_mu_star": null,
-    "total_evals": 4900,
-    "cache_hits": 2597,
-    "unique_evals": 2303,
-    "evals_per_second": 136.6895532029729,
+    "total_evals": 5033,
+    "cache_hits": 2217,
+    "unique_evals": 2683,
+    "evals_per_second": 103.57592921911093,
     "status_breakdown": {
-      "NOT_SCALABLE": 4423,
-      "OPTIMAL": 466,
-      "OPTIMAL_INACCURATE": 5,
+      "OPTIMAL": 4382,
+      "NOT_SCALABLE": 455,
+      "OPTIMAL_INACCURATE": 190,
       "NO_NULLSPACE_DEGREES_OF_FREEDOM": 6
     },
-    "not_scalable_count": 4423,
-    "not_scalable_rate": 0.9026530612244898,
+    "not_scalable_count": 455,
+    "not_scalable_rate": 0.09040333796940195,
     "false_positives_detected": 0
   }
 }

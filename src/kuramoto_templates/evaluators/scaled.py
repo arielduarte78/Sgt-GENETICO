@@ -268,37 +268,90 @@ class ScaledSDPEvaluator:
         # Validación de rango admisible de escala
         if h_eff < 1e-4 or h_eff > 0.1:
             res_plain = self.plain_evaluator.evaluate_phase1(x, phi)
+            s_plain = float(res_plain.s) if res_plain.s is not None else 1.0
+            lam_plain = float(res_plain.lam) if res_plain.lam is not None else float("-inf")
+            is_stable_macro = (
+                res_plain.status in ("OPTIMAL", "OPTIMAL_INACCURATE")
+                and lam_plain >= self.config.lam_floor
+                and s_plain <= self.config.s_tol
+            )
+            if is_stable_macro:
+                f_val = lam_plain
+                lam_scaled = lam_plain
+                lam_norm_scaled = (
+                    float(res_plain.lam_normalized)
+                    if res_plain.lam_normalized is not None
+                    else lam_plain
+                )
+            else:
+                lam_scaled = min(lam_plain / 1e-8, -10.0)
+                norm_base = (
+                    float(res_plain.lam_normalized)
+                    if res_plain.lam_normalized is not None
+                    else lam_plain
+                )
+                lam_norm_scaled = min(norm_base / 1e-8, -10.0) - s_plain
+                f_val = min(lam_plain / 1e-8 - self.lam_floor_hat, -10.0) - s_plain
+
             return EvalResult(
-                f=res_plain.f,
+                f=f_val,
                 mu=None,
                 Phi=res_plain.Phi,
-                lam=res_plain.lam,
-                s=res_plain.s,
-                lam_normalized=res_plain.lam_normalized,
+                lam=lam_scaled,
+                s=s_plain,
+                lam_normalized=lam_norm_scaled,
                 P=res_plain.P,
                 status="NOT_SCALABLE",
                 solver_info={
                     "h_eff": h_eff,
                     "reason": "h_eff outside [1e-4, 0.1]",
                     "plain_status": res_plain.status,
+                    "lam_plain": lam_plain,
                 },
             )
 
         T = build_scaled_basis_t(x_arr, phi_arr, sheets, ref_sheet, h_eff)
         if T is None:
             res_plain = self.plain_evaluator.evaluate_phase1(x, phi)
+            s_plain = float(res_plain.s) if res_plain.s is not None else 1.0
+            lam_plain = float(res_plain.lam) if res_plain.lam is not None else float("-inf")
+            is_stable_macro = (
+                res_plain.status in ("OPTIMAL", "OPTIMAL_INACCURATE")
+                and lam_plain >= self.config.lam_floor
+                and s_plain <= self.config.s_tol
+            )
+            if is_stable_macro:
+                f_val = lam_plain
+                lam_scaled = lam_plain
+                lam_norm_scaled = (
+                    float(res_plain.lam_normalized)
+                    if res_plain.lam_normalized is not None
+                    else lam_plain
+                )
+            else:
+                lam_scaled = min(lam_plain / 1e-8, -10.0)
+                norm_base = (
+                    float(res_plain.lam_normalized)
+                    if res_plain.lam_normalized is not None
+                    else lam_plain
+                )
+                lam_norm_scaled = min(norm_base / 1e-8, -10.0) - s_plain
+                f_val = min(lam_plain / 1e-8 - self.lam_floor_hat, -10.0) - s_plain
+
             return EvalResult(
-                f=res_plain.f,
+                f=f_val,
                 mu=None,
                 Phi=res_plain.Phi,
-                lam=res_plain.lam,
-                s=res_plain.s,
-                lam_normalized=res_plain.lam_normalized,
+                lam=lam_scaled,
+                s=s_plain,
+                lam_normalized=lam_norm_scaled,
                 P=res_plain.P,
                 status="NOT_SCALABLE",
                 solver_info={
                     "h_eff": h_eff,
                     "reason": "Could not form full rank basis T",
+                    "plain_status": res_plain.status,
+                    "lam_plain": lam_plain,
                 },
             )
 

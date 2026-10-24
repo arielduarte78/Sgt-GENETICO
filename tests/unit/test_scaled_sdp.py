@@ -330,4 +330,37 @@ def test_genome_sheet_assignment_vs_fallback() -> None:
     assert sheets_g == sheets_fb
 
 
+def test_t9_scale_incompatibility_penalty_s7_beats_c4_at_frontier() -> None:
+    """Valida que en mu_t = 0.69291 el fitness de S7(h=0.002, t=0) en ScaledSDPEvaluator
+    sea estrictamente mayor que el fitness de C4 exacto (m=4, h_eff=0).
+
+    Evita el colapso por reward hacking donde C4 unscaled batía a S7.
+    """
+    from kuramoto_templates.cases.c4 import get_c4_template
+    from kuramoto_templates.cases.s7 import get_s7_appendix_a_template
+
+    mu_t = 0.69291
+    ev = ScaledSDPEvaluator(
+        EvalConfig(
+            mu_t=mu_t,
+            solver_tol=1e-8,
+            lam_floor=1e-7,
+            lam_floor_hat=1e-5,
+        )
+    )
+
+    s7_template = get_s7_appendix_a_template(h=0.002, t=0.0)
+    c4_template = get_c4_template()
+
+    res_s7 = ev.evaluate_phase1(s7_template.x, s7_template.phi)
+    res_c4 = ev.evaluate_phase1(c4_template.x, c4_template.phi)
+
+    assert res_c4.status == "NOT_SCALABLE"
+    assert res_s7.status == "OPTIMAL"
+    assert res_c4.f <= -10.0, f"C4 debe recibir penalización de barrera <= -10.0, dio {res_c4.f}"
+    assert res_s7.f > -0.1, f"S7 en frontera debe tener f ~ -1e-3, dio {res_s7.f}"
+    assert res_s7.f > res_c4.f, f"f(S7)={res_s7.f} debe ser estrictamente mayor que f(C4)={res_c4.f}"
+
+
+
 

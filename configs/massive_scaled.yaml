@@ -8,7 +8,7 @@ lam_floor_hat: 1.0e-05
 migration_count: 2
 migration_interval: 5
 mu_t: 0.69291
-num_generations: 200
+num_generations: 1500
 num_islands: 8
 num_workers: 1
 operator_probs:

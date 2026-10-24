@@ -213,6 +213,12 @@ class GAEngine:
             + list(genome.k)
         )
 
+        floor_to_use = (
+            getattr(self.config, "lam_floor_hat", 1e-5)
+            if getattr(self.config, "evaluator", "plain") == "scaled"
+            else self.config.lam_floor
+        )
+
         if cache_key in self.cache:
             self.cache_hits += 1
             entry = self.cache[cache_key]
@@ -221,6 +227,21 @@ class GAEngine:
             lam_normalized = float(entry["lam_normalized"])
             solver_status = str(entry["solver_status"])
             eval_time = float(entry["eval_time"])
+            f = (
+                float(entry["f"])
+                if "f" in entry
+                else compute_continuous_fitness(
+                    lam=lam_star,
+                    s=s_star,
+                    tol=self.config.tol,
+                    lam_floor=floor_to_use,
+                )
+            )
+            f_sel = (
+                float(entry["f_sel"])
+                if "f_sel" in entry
+                else compute_f_sel(s_star, lam_normalized, tol=self.config.tol)
+            )
         else:
             t0 = time.perf_counter()
             try:
@@ -236,26 +257,32 @@ class GAEngine:
             )
             solver_status = str(res.status)
 
+            if (
+                solver_status == "NOT_SCALABLE"
+                and hasattr(res, "f")
+                and res.f is not None
+                and res.f <= -10.0
+            ):
+                f = float(res.f)
+                f_sel = float(res.f)
+            else:
+                f = compute_continuous_fitness(
+                    lam=lam_star,
+                    s=s_star,
+                    tol=self.config.tol,
+                    lam_floor=floor_to_use,
+                )
+                f_sel = compute_f_sel(s_star, lam_normalized, tol=self.config.tol)
+
             self.cache[cache_key] = {
                 "s_star": s_star,
                 "lam_star": lam_star,
                 "lam_normalized": lam_normalized,
                 "solver_status": solver_status,
                 "eval_time": eval_time,
+                "f": f,
+                "f_sel": f_sel,
             }
-
-        floor_to_use = (
-            getattr(self.config, "lam_floor_hat", 1e-5)
-            if getattr(self.config, "evaluator", "plain") == "scaled"
-            else self.config.lam_floor
-        )
-        f = compute_continuous_fitness(
-            lam=lam_star,
-            s=s_star,
-            tol=self.config.tol,
-            lam_floor=floor_to_use,
-        )
-        f_sel = compute_f_sel(s_star, lam_normalized, tol=self.config.tol)
 
         ind = Individual(
             id=self.next_id,
@@ -529,26 +556,45 @@ class GAEngine:
 
             # Inject seeds if enabled
             if not self.no_seeds:
-                s7_seed = create_s7_direct_seed()
-                ind_s7 = self._evaluate(
-                    genome=s7_seed.genome,
-                    parent_ids=(),
-                    operator_name="seed_s7",
-                    island=island_idx,
-                    generation=0,
-                    phenotype_override=(s7_seed.phenotype_x, s7_seed.phenotype_phi),
-                )
-                pop.append(ind_s7)
+                if getattr(self.config, "evaluator", "plain") == "scaled":
+                    # En modo escalado, inyectar diversidad en el régimen escalable y no inyectar C4 degenerado
+                    scaled_seeds_params = [
+                        (0.002, 0.0, "seed_s7_h0.002_t0"),
+                        (0.001, 0.0, "seed_s7_h0.001_t0"),
+                        (0.0015, 0.0005, "seed_s7_h0.0015_t0.0005"),
+                    ]
+                    for h_val, t_val, op_name in scaled_seeds_params:
+                        seed_ind = create_s7_direct_seed(h=h_val, t=t_val)
+                        ind_seed = self._evaluate(
+                            genome=seed_ind.genome,
+                            parent_ids=(),
+                            operator_name=op_name,
+                            island=island_idx,
+                            generation=0,
+                            phenotype_override=(seed_ind.phenotype_x, seed_ind.phenotype_phi),
+                        )
+                        pop.append(ind_seed)
+                else:
+                    s7_seed = create_s7_direct_seed()
+                    ind_s7 = self._evaluate(
+                        genome=s7_seed.genome,
+                        parent_ids=(),
+                        operator_name="seed_s7",
+                        island=island_idx,
+                        generation=0,
+                        phenotype_override=(s7_seed.phenotype_x, s7_seed.phenotype_phi),
+                    )
+                    pop.append(ind_s7)
 
-                c4_seed = create_c4_seed()
-                ind_c4 = self._evaluate(
-                    genome=c4_seed.genome,
-                    parent_ids=(),
-                    operator_name="seed_c4",
-                    island=island_idx,
-                    generation=0,
-                )
-                pop.append(ind_c4)
+                    c4_seed = create_c4_seed()
+                    ind_c4 = self._evaluate(
+                        genome=c4_seed.genome,
+                        parent_ids=(),
+                        operator_name="seed_c4",
+                        island=island_idx,
+                        generation=0,
+                    )
+                    pop.append(ind_c4)
 
             # Fill the rest with randomized valid genomes
             while len(pop) < self.config.island_pop_size:
