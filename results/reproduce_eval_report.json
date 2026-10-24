@@ -1,5 +1,5 @@
 {
-  "timestamp_utc": "2026-10-24T12:21:17Z",
+  "timestamp_utc": "2026-10-24T12:49:17Z",
   "environment": {
     "python_version": "3.12.12 (main, Feb 12 2026, 00:40:26) [MSC v.1944 64 bit (AMD64)]",
     "platform": "Windows-11-10.0.26200-SP0",
@@ -34,15 +34,15 @@
     },
     "suite_b": {
       "random_50_candidates": {
-        "min_Phi": 0.836738080113314,
-        "max_Phi": 0.9999999999710509,
+        "min_Phi": 0.005897874705282426,
+        "max_Phi": 0.6910227355969932,
         "all_in_0_1": true,
         "passed": true
       },
       "c4_phase1_rejection": {
-        "Phi": 0.9999999998089291,
+        "Phi": 3.2103956040886633e-14,
         "expected_gt_zero": true,
-        "passed": true
+        "passed": false
       }
     },
     "suite_c": {

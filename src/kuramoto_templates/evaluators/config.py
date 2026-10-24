@@ -29,6 +29,9 @@ class EvalConfig:
     phase1_tol: float = 1e-6
     solver_tol: float = 1e-10
     solver_name: str = "CLARABEL"
+    mu_t: float = 0.6929077
+    rho: float = 1.0
+    s_tol: float = 1e-6
 
     def __post_init__(self) -> None:
         """Valida la positividad y coherencia de los parámetros."""
@@ -47,6 +50,18 @@ class EvalConfig:
         if self.solver_tol <= 0.0:
             raise ValueError(
                 f"solver_tol debe ser estrictamente positivo, recibido {self.solver_tol}."
+            )
+        if self.mu_t <= 0.0:
+            raise ValueError(
+                f"mu_t debe ser estrictamente positivo, recibido {self.mu_t}."
+            )
+        if self.rho <= 0.0:
+            raise ValueError(
+                f"rho debe ser estrictamente positivo, recibido {self.rho}."
+            )
+        if self.s_tol <= 0.0:
+            raise ValueError(
+                f"s_tol debe ser estrictamente positivo, recibido {self.s_tol}."
             )
         valid_solvers = {"CLARABEL", "SCS"}
         if self.solver_name.upper() not in valid_solvers:

@@ -1,0 +1,73 @@
+{
+  "description": "Barrido de h para S7 a t=0 comparando Fase I (lam*, s*) y Fase II (mu* eps=0) vs preprint Table",
+  "results": [
+    {
+      "h": 0.02,
+      "t": 0.0,
+      "cited_mu_preprint": 0.6906,
+      "phase1": {
+        "lam_star": -0.0006553335401567335,
+        "s_star": 6.174991719493949e-11,
+        "lam_normalized": -0.011624010961674362,
+        "status": "OPTIMAL",
+        "max_m_basis_norm": 0.05637757417103614
+      },
+      "phase2_eps_0": {
+        "mu_star": 0.6790320788991635,
+        "status": "OPTIMAL",
+        "gap_vs_cited": -0.011567921100836487
+      }
+    },
+    {
+      "h": 0.01,
+      "t": 0.0,
+      "cited_mu_preprint": 0.6918,
+      "phase1": {
+        "lam_star": -0.0003346878170631502,
+        "s_star": 2.43448004762758e-11,
+        "lam_normalized": -0.005934800566663348,
+        "status": "OPTIMAL",
+        "max_m_basis_norm": 0.0563941135517074
+      },
+      "phase2_eps_0": {
+        "mu_star": 0.6852672232083941,
+        "status": "OPTIMAL",
+        "gap_vs_cited": -0.00653277679160591
+      }
+    },
+    {
+      "h": 0.005,
+      "t": 0.0,
+      "cited_mu_preprint": 0.6924,
+      "phase1": {
+        "lam_star": -0.00016909612913926879,
+        "s_star": 2.122931423508733e-12,
+        "lam_normalized": -0.002998251420714932,
+        "status": "OPTIMAL",
+        "max_m_basis_norm": 0.05639824864952382
+      },
+      "phase2_eps_0": {
+        "mu_star": 0.6888265183960438,
+        "status": "OPTIMAL",
+        "gap_vs_cited": -0.003573481603956208
+      }
+    },
+    {
+      "h": 0.002,
+      "t": 0.0,
+      "cited_mu_preprint": 0.69272,
+      "phase1": {
+        "lam_star": -6.805976258209748e-05,
+        "s_star": 1.5162674258273425e-11,
+        "lam_normalized": -0.0012067460778705846,
+        "status": "OPTIMAL",
+        "max_m_basis_norm": 0.05639940649502275
+      },
+      "phase2_eps_0": {
+        "mu_star": 0.6911817087490628,
+        "status": "OPTIMAL",
+        "gap_vs_cited": -0.0015382912509371849
+      }
+    }
+  ]
+}

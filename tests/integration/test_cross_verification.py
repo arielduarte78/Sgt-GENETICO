@@ -61,8 +61,8 @@ def test_cross_verification_clarabel_vs_scs_20_individuals() -> None:
         noise = rng.uniform(-0.04, 0.04, size=m)
         phi = tuple(float(v) for v in (base_phi + noise))
 
-        res_c = eval_clarabel.evaluate(x, phi)
-        res_s = eval_scs.evaluate(x, phi)
+        res_c = eval_clarabel.evaluate_phase2(x, phi)
+        res_s = eval_scs.evaluate_phase2(x, phi)
 
         assert res_c.mu is not None, (
             f"Individuo {i}: Clarabel falló al evaluar mu* (status={res_c.status})"

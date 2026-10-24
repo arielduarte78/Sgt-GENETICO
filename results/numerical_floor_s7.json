@@ -1,74 +1,58 @@
 [
   {
     "eps": 0.001,
-    "Phi": 0.9997297064442264,
-    "status": "OPTIMAL",
-    "delta": 0.0009997297064442264,
-    "tau": 0.0,
+    "mu": null,
+    "status": "INFEASIBLE",
     "optimal_inaccurate": 0,
-    "solve_time": 0.021116599999913888
+    "solve_time": 0.019448999999440275
   },
   {
     "eps": 0.0001,
-    "Phi": 1.0,
-    "status": "SOLVER_ERROR",
-    "delta": -1.0,
-    "tau": -1.0,
+    "mu": null,
+    "status": "INFEASIBLE",
     "optimal_inaccurate": 0,
-    "solve_time": 0.018749900000329944
+    "solve_time": 0.014399300000150106
   },
   {
     "eps": 1e-05,
-    "Phi": 0.9729705743287232,
-    "status": "OPTIMAL",
-    "delta": 9.729705743287233e-06,
-    "tau": 0.0,
+    "mu": null,
+    "status": "INFEASIBLE",
     "optimal_inaccurate": 0,
-    "solve_time": 0.07636350000029779
+    "solve_time": 0.020332000000053085
   },
   {
     "eps": 1e-06,
-    "Phi": 0.6440940706990551,
-    "status": "OPTIMAL_INACCURATE",
-    "delta": 6.44093779047953e-07,
-    "tau": 2.9165110212366034e-17,
-    "optimal_inaccurate": 1,
-    "solve_time": 0.023701699999946868
+    "mu": null,
+    "status": "INFEASIBLE",
+    "optimal_inaccurate": 0,
+    "solve_time": 0.015485299998545088
   },
   {
     "eps": 1e-07,
-    "Phi": 0.0,
-    "status": "OPTIMAL_INACCURATE",
-    "delta": 0.0,
-    "tau": 0.0,
+    "mu": null,
+    "status": "VERIFICATION_FAILED",
     "optimal_inaccurate": 1,
-    "solve_time": 0.027571999999963737
+    "solve_time": 0.027402399999118643
   },
   {
     "eps": 1e-08,
-    "Phi": 3.025515384892662e-07,
+    "mu": 0.6887758796644321,
     "status": "OPTIMAL_INACCURATE",
-    "delta": 0.0,
-    "tau": 3.0255153848926618e-19,
     "optimal_inaccurate": 1,
-    "solve_time": 0.024153999999725784
+    "solve_time": 0.015588000000207103
   },
   {
     "eps": 1e-09,
-    "Phi": 1.0,
-    "status": "UNBOUNDED",
-    "delta": -1.0,
-    "tau": -1.0,
-    "optimal_inaccurate": 0,
-    "solve_time": 0.016405800000029558
+    "mu": 0.6911467543617522,
+    "status": "OPTIMAL_INACCURATE",
+    "optimal_inaccurate": 1,
+    "solve_time": 0.017308300000877352
   },
   {
     "eps": 1e-10,
-    "Phi": 1.0,
-    "status": "UNBOUNDED",
-    "delta": -1.0,
-    "tau": -1.0,
-    "optimal_inaccurate": 0,
-    "solve_time": 0.012061200000061945
+    "mu": null,
+    "status": "VERIFICATION_FAILED",
+    "optimal_inaccurate": 1,
+    "solve_time": 0.015820300000996212
   }
 ]

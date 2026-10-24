@@ -233,8 +233,8 @@ def run_reproduce_eval() -> dict[str, Any]:
         noise = rng_d.uniform(-0.04, 0.04, size=m_d)
         phi_d = tuple(float(v) for v in (base_phi + noise))
 
-        rc = eval_c.evaluate(x_d, phi_d)
-        rs = eval_s.evaluate(x_d, phi_d)
+        rc = eval_c.evaluate_phase2(x_d, phi_d)
+        rs = eval_s.evaluate_phase2(x_d, phi_d)
         assert rc.mu is not None and rs.mu is not None
         diff = abs(rc.mu - rs.mu)
         disc_list.append({"index": idx, "clarabel": rc.mu, "scs": rs.mu, "diff": diff})

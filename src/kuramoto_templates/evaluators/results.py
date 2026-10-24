@@ -32,6 +32,9 @@ class EvalResult:
     f: float
     mu: float | None
     Phi: float
+    lam: float | None = None
+    s: float | None = None
+    lam_normalized: float | None = None
     P: tuple[tuple[float, ...], ...] | None = None
     status: str = "PENDING"
     solver_info: dict[str, float | str | int] = field(default_factory=dict)

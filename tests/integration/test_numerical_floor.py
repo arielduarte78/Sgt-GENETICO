@@ -57,25 +57,23 @@ def test_numerical_floor_degradation_s7() -> None:
             solver_name="CLARABEL",
         )
         evaluator = SDPEvaluator(config=config)
-        res = evaluator.evaluate_phase1(s7.x, s7.phi)
+        res = evaluator.evaluate_phase2(s7.x, s7.phi, eps=eps)
 
-        delta_val = res.solver_info.get("delta", -1.0)
-        solve_time = res.solver_info.get("solve_time_phase1", 0.0)
+        solve_time = float(res.solver_info.get("solve_time_phase2", 0.0))
         status = res.status
+        mu_val = res.mu
 
+        mu_str = f"{mu_val:.6f}" if mu_val is not None else "None"
         print(
-            f"{eps:<10.1e} | {res.Phi:<10.6f} | {status:<20} | "
-            f"{delta_val:<12.2e} | {solve_time:<10.4f}"
+            f"{eps:<10.1e} | {mu_str:<10} | {status:<20} | {solve_time:<10.4f}"
         )
 
         curve_data.append(
             {
                 "eps": eps,
-                "Phi": res.Phi,
+                "mu": mu_val,
                 "status": status,
-                "delta": delta_val,
-                "tau": res.solver_info.get("tau", -1.0),
-                "optimal_inaccurate": res.solver_info.get("optimal_inaccurate", 0),
+                "optimal_inaccurate": res.solver_info.get("optimal_inaccurate_phase2", 0),
                 "solve_time": solve_time,
             }
         )
@@ -95,30 +93,31 @@ def test_numerical_floor_degradation_s7() -> None:
             "Análisis empírico del comportamiento del solver Clarabel con tolerancias 1e-10 "
             "al variar el margen espectral $\\varepsilon$.\n\n"
         )
-        f.write("| $\\varepsilon$ | $\\Phi$ | Estatus del Solver | $\\delta$ | Tiempo (s) |\n")
-        f.write("|---|---|---|---|---|\n")
+        f.write("| $\\varepsilon$ | $\\mu^*$ | Estatus del Solver | Tiempo (s) |\n")
+        f.write("|---|---|---|---|\n")
         for row in curve_data:
+            mu_display = f"{row['mu']:.6f}" if row["mu"] is not None else "None"
             f.write(
-                f"| {row['eps']:.1e} | {row['Phi']:.6f} | `{row['status']}` | "
-                f"{row['delta']:.2e} | {row['solve_time']:.4f} |\n"
+                f"| {row['eps']:.1e} | {mu_display} | `{row['status']}` | "
+                f"{row['solve_time']:.4f} |\n"
             )
         f.write(
-            "\n\n**Conclusión**: Para $\\varepsilon < 10^{-7}$, el problema semidefinido entra "
+            "\n\n**Conclusión**: Para $\\varepsilon \\ge 10^{-6}$, el requerimiento espectral es infactible. "
+            "Para $\\varepsilon < 10^{-7}$, el problema semidefinido entra "
             "en la zona de ruido numérico de las tolerancias $10^{-8}\\dots 10^{-10}$, "
-            "provocando estados `OPTIMAL_INACCURATE` o fallos de convergencia.\n"
+            "provocando estados `OPTIMAL_INACCURATE` o fallos de verificación.\n"
         )
 
     print(f"Artefactos guardados exitosamente en:\n - {json_path}\n - {md_path}")
 
-    # Verificar que para eps intermedio (1e-6) se registre la respuesta y se marque inaccurate
+    # Verificar que para eps intermedio (1e-6) sea infactible (margen espectral < 1e-6)
     row_1e6 = next(r for r in curve_data if r["eps"] == 1e-6)
-    assert row_1e6["status"] in ("OPTIMAL", "OPTIMAL_INACCURATE")
-    assert 0.0 <= row_1e6["Phi"] <= 1.0
+    assert row_1e6["status"] == "INFEASIBLE"
 
     # Verificar que para eps muy pequeño (<= 1e-8) se observe degradación o inexactitud
     row_1e8 = next(r for r in curve_data if r["eps"] == 1e-8)
     is_degraded = (
-        row_1e8["status"] in ("OPTIMAL_INACCURATE", "SOLVER_ERROR")
+        row_1e8["status"] in ("OPTIMAL_INACCURATE", "SOLVER_ERROR", "VERIFICATION_FAILED")
         or row_1e8["optimal_inaccurate"] == 1
     )
     assert is_degraded

@@ -30,6 +30,7 @@ from kuramoto_templates.domain.conditions import (
 )
 from kuramoto_templates.evaluators.base import Evaluator
 from kuramoto_templates.evaluators.config import EvalConfig
+from kuramoto_templates.evaluators.fitness import compute_continuous_fitness
 from kuramoto_templates.evaluators.results import EvalResult
 
 
@@ -85,36 +86,41 @@ class SDPEvaluator(Evaluator):
         )
 
     def evaluate(self, x: tuple[float, ...], phi: tuple[float, ...]) -> EvalResult:
-        """Evalúa un candidato (x, phi) resolviendo Fase I y, si es factible, Fase II.
+        """Evalúa un candidato (x, phi) resolviendo Fase I y, si s* <= tol, Fase II.
 
         Args:
             x: Tamaños de cluster x_a > 0, sum x_a = 1.
             phi: Fases de cluster phi_a en (-pi, pi].
 
         Returns:
-            EvalResult con fitness escalar f, conectividad mu* y diagnósticos completos.
+            EvalResult con fitness continua f, conectividad mu* y diagnósticos completos.
         """
-        # 1. Ejecutar Fase I elástica
+        # 1. Ejecutar Fase I sin tau
         res_phase1 = self._solve_phase1(x, phi)
-        Phi = res_phase1.Phi
 
-        # Si Fase I no es factible bajo el umbral configurado, retornar fitness penalizado
-        if Phi > self.config.phase1_tol or res_phase1.status not in (
-            "OPTIMAL",
-            "OPTIMAL_INACCURATE",
+        # Si el déficit s* supera la tolerancia o el solver no convergió, retornar Fase I
+        if (
+            res_phase1.s is None
+            or res_phase1.s > self.config.s_tol
+            or res_phase1.status not in ("OPTIMAL", "OPTIMAL_INACCURATE")
         ):
-            f_penalized = -math.log10(1.0 + max(Phi, 1e-6) / 1e-6)
-            return EvalResult(
-                f=f_penalized,
-                mu=None,
-                Phi=Phi,
-                P=None,
-                status=res_phase1.status,
-                solver_info=res_phase1.solver_info,
-            )
+            return res_phase1
 
-        # 2. Ejecutar Fase II: Maximización de conectividad mu*
-        return self._solve_phase2(x, phi, res_phase1)
+        # 2. Si s* <= tol, proceder a Fase II (maximización de conectividad mu*)
+        res_phase2 = self._solve_phase2(x, phi, res_phase1)
+        if res_phase2.mu is not None:
+            return EvalResult(
+                f=res_phase1.f,
+                mu=res_phase2.mu,
+                Phi=res_phase1.Phi,
+                lam=res_phase1.lam,
+                s=res_phase1.s,
+                lam_normalized=res_phase1.lam_normalized,
+                P=res_phase2.P,
+                status=res_phase2.status,
+                solver_info=res_phase2.solver_info,
+            )
+        return res_phase2
 
     def _get_solver_kwargs(self) -> dict[str, Any]:
         """Configura los argumentos y tolerancias según el solver seleccionado."""
@@ -144,7 +150,11 @@ class SDPEvaluator(Evaluator):
     def _solve_phase1(
         self, x: tuple[float, ...], phi: tuple[float, ...]
     ) -> EvalResult:
-        """Formula y resuelve la Fase I elástica en cvxpy."""
+        """Formula y resuelve la Fase I sin tau en cvxpy.
+
+        lam* = max lam  s.a  p=Nz en [0,1]^K, M(p) >> lam*I, c_a(p) >= eps_c,
+                             d_a(p) >= mu_t - s,  s >= 0, objetivo: lam - rho*s
+        """
         x_arr = np.asarray(x, dtype=float)
         phi_arr = np.asarray(phi, dtype=float)
         m = len(x_arr)
@@ -153,28 +163,55 @@ class SDPEvaluator(Evaluator):
 
         A_F = build_af_matrix(x_arr, phi_arr)
         A_c = build_ac_matrix(x_arr, phi_arr)
+        A_d = build_ad_matrix(x_arr)
         Q = scipy.linalg.null_space(np.ones((1, m), dtype=float))
         M_basis = build_m_basis(x_arr, phi_arr, Q)
 
-        eps = self.config.eps
-        eps_c = self.config.eps_c
-        theta_tol = self.config.theta_tol
+        # Norma espectral máxima de las matrices base M_k
+        m_basis_norms = [float(np.linalg.norm(M_basis[k], 2)) for k in range(K)]
+        max_m_basis_norm = max(m_basis_norms) if m_basis_norms else 1.0
+        if max_m_basis_norm < 1e-15:
+            max_m_basis_norm = 1.0
 
-        # Variables de optimización
-        p = cp.Variable(K)
-        tau = cp.Variable(nonneg=True)
-        delta = cp.Variable(nonneg=True)
+        N = scipy.linalg.null_space(A_F)
+        d = N.shape[1]
 
-        M_expr = sum(p[k] * M_basis[k] for k in range(K))
-        obj = cp.Minimize(tau / (eps * theta_tol) + delta / eps)
+        if d == 0:
+            s_default = max(0.0, float(self.config.mu_t - np.min(x_arr)))
+            f_val = compute_continuous_fitness(lam=0.0, s=s_default, tol=self.config.s_tol)
+            return EvalResult(
+                f=f_val,
+                mu=None,
+                Phi=s_default,
+                lam=0.0,
+                s=s_default,
+                lam_normalized=0.0,
+                P=None,
+                status="NO_NULLSPACE_DEGREES_OF_FREEDOM",
+                solver_info={
+                    "solver": self.config.solver_name,
+                    "lam": 0.0,
+                    "s": s_default,
+                    "lam_normalized": 0.0,
+                    "max_m_basis_norm": max_m_basis_norm,
+                },
+            )
+
+        z = cp.Variable(d)
+        lam_var = cp.Variable()
+        s_var = cp.Variable(nonneg=True)
+        p_z = N @ z
+
+        M_z_expr = sum(p_z[k] * M_basis[k] for k in range(K))
+        obj = cp.Maximize(lam_var - self.config.rho * s_var)
 
         constraints = [
-            A_F @ p <= tau,
-            -A_F @ p <= tau,
-            M_expr >> (eps - delta) * np.eye(m - 1),
-            x_arr + A_c @ p >= eps_c,
-            p >= 0.0,
-            p <= 1.0,
+            p_z >= 0.0,
+            p_z <= 1.0,
+            M_z_expr >> lam_var * np.eye(m - 1),
+            x_arr + A_c @ p_z >= self.config.eps_c,
+            x_arr + A_d @ p_z >= self.config.mu_t - s_var,
+            s_var >= 0.0,
         ]
 
         prob = cp.Problem(obj, constraints)
@@ -187,10 +224,14 @@ class SDPEvaluator(Evaluator):
             raw_status = prob.status
         except Exception as e:
             solve_time = time.perf_counter() - t0
+            s_fail = 1.0
             return EvalResult(
-                f=-math.log10(1.0 + 1.0 / 1e-6),
+                f=-s_fail,
                 mu=None,
-                Phi=1.0,
+                Phi=s_fail,
+                lam=None,
+                s=s_fail,
+                lam_normalized=None,
                 P=None,
                 status="SOLVER_ERROR",
                 solver_info={
@@ -199,42 +240,70 @@ class SDPEvaluator(Evaluator):
                     "solver": self.config.solver_name,
                     "cvxpy_version": getattr(cp, "__version__", "unknown"),
                     "solver_version": getattr(clarabel, "__version__", "unknown"),
+                    "max_m_basis_norm": max_m_basis_norm,
                 },
             )
 
         status_norm = raw_status.upper()
         is_optimal = status_norm in ("OPTIMAL", "OPTIMAL_INACCURATE")
 
-        Phi_val = float(prob.value) if (is_optimal and prob.value is not None) else 1.0
-        # Asegurar cota matemática numérica
-        Phi_val = max(0.0, min(1.0, Phi_val))
+        if (
+            is_optimal
+            and lam_var.value is not None
+            and s_var.value is not None
+            and z.value is not None
+        ):
+            lam_val = float(lam_var.value)
+            s_val = max(0.0, float(s_var.value))
+            lam_norm = lam_val / max_m_basis_norm
+            f_val = compute_continuous_fitness(lam=lam_val, s=s_val, tol=self.config.s_tol)
 
-        f_val = -math.log10(1.0 + max(Phi_val, 1e-6) / 1e-6)
-
-        P_opt: tuple[tuple[float, ...], ...] | None = None
-        if is_optimal and p.value is not None:
-            P_mat = p_vector_to_matrix(np.clip(p.value, 0.0, 1.0), m)
+            p_opt_vec = np.clip(N @ z.value, 0.0, 1.0)
+            P_mat = p_vector_to_matrix(p_opt_vec, m)
             P_opt = tuple(tuple(float(v) for v in row) for row in P_mat)
 
-        solver_info: dict[str, float | str | int] = {
-            "cvxpy_version": getattr(cp, "__version__", "unknown"),
-            "solver": self.config.solver_name,
-            "solver_version": getattr(clarabel, "__version__", "unknown"),
-            "solve_time_phase1": solve_time,
-            "status_phase1": status_norm,
-            "optimal_inaccurate": int(status_norm == "OPTIMAL_INACCURATE"),
-            "tau": float(tau.value) if tau.value is not None else -1.0,
-            "delta": float(delta.value) if delta.value is not None else -1.0,
-        }
+            solver_info: dict[str, float | str | int] = {
+                "cvxpy_version": getattr(cp, "__version__", "unknown"),
+                "solver": self.config.solver_name,
+                "solver_version": getattr(clarabel, "__version__", "unknown"),
+                "solve_time_phase1": solve_time,
+                "status_phase1": status_norm,
+                "optimal_inaccurate": int(status_norm == "OPTIMAL_INACCURATE"),
+                "lam": lam_val,
+                "s": s_val,
+                "lam_normalized": lam_norm,
+                "max_m_basis_norm": max_m_basis_norm,
+                "obj_phase1": lam_val - self.config.rho * s_val,
+            }
 
-        return EvalResult(
-            f=f_val,
-            mu=None,
-            Phi=Phi_val,
-            P=P_opt,
-            status=status_norm,
-            solver_info=solver_info,
-        )
+            return EvalResult(
+                f=f_val,
+                mu=None,
+                Phi=s_val,
+                lam=lam_val,
+                s=s_val,
+                lam_normalized=lam_norm,
+                P=P_opt,
+                status=status_norm,
+                solver_info=solver_info,
+            )
+        else:
+            s_fallback = 1.0
+            return EvalResult(
+                f=-s_fallback,
+                mu=None,
+                Phi=s_fallback,
+                lam=None,
+                s=s_fallback,
+                lam_normalized=None,
+                P=None,
+                status=status_norm,
+                solver_info={
+                    "solve_time_phase1": solve_time,
+                    "status_phase1": status_norm,
+                    "max_m_basis_norm": max_m_basis_norm,
+                },
+            )
 
     def _solve_phase2(
         self,
