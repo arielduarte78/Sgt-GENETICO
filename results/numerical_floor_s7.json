@@ -1,0 +1,74 @@
+[
+  {
+    "eps": 0.001,
+    "Phi": 0.9997297064442264,
+    "status": "OPTIMAL",
+    "delta": 0.0009997297064442264,
+    "tau": 0.0,
+    "optimal_inaccurate": 0,
+    "solve_time": 0.01919530000031955
+  },
+  {
+    "eps": 0.0001,
+    "Phi": 1.0,
+    "status": "SOLVER_ERROR",
+    "delta": -1.0,
+    "tau": -1.0,
+    "optimal_inaccurate": 0,
+    "solve_time": 0.013470900000356778
+  },
+  {
+    "eps": 1e-05,
+    "Phi": 0.9729705743287232,
+    "status": "OPTIMAL",
+    "delta": 9.729705743287233e-06,
+    "tau": 0.0,
+    "optimal_inaccurate": 0,
+    "solve_time": 0.015287799999896379
+  },
+  {
+    "eps": 1e-06,
+    "Phi": 0.6440940706990551,
+    "status": "OPTIMAL_INACCURATE",
+    "delta": 6.44093779047953e-07,
+    "tau": 2.9165110212366034e-17,
+    "optimal_inaccurate": 1,
+    "solve_time": 0.015513600000303995
+  },
+  {
+    "eps": 1e-07,
+    "Phi": 0.0,
+    "status": "OPTIMAL_INACCURATE",
+    "delta": 0.0,
+    "tau": 0.0,
+    "optimal_inaccurate": 1,
+    "solve_time": 0.02154340000015509
+  },
+  {
+    "eps": 1e-08,
+    "Phi": 3.025515384892662e-07,
+    "status": "OPTIMAL_INACCURATE",
+    "delta": 0.0,
+    "tau": 3.0255153848926618e-19,
+    "optimal_inaccurate": 1,
+    "solve_time": 0.025058700000045064
+  },
+  {
+    "eps": 1e-09,
+    "Phi": 1.0,
+    "status": "UNBOUNDED",
+    "delta": -1.0,
+    "tau": -1.0,
+    "optimal_inaccurate": 0,
+    "solve_time": 0.015669100000195613
+  },
+  {
+    "eps": 1e-10,
+    "Phi": 1.0,
+    "status": "UNBOUNDED",
+    "delta": -1.0,
+    "tau": -1.0,
+    "optimal_inaccurate": 0,
+    "solve_time": 0.019919600000321225
+  }
+]
