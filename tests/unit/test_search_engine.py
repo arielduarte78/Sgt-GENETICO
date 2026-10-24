@@ -153,3 +153,61 @@ def test_engine_bit_for_bit_checkpoint_resume_identity() -> None:
             assert hof_f["id"] == hof_r["id"]
             assert hof_f["genome"] == hof_r["genome"]
             assert hof_f["f"] == pytest.approx(hof_r["f"])
+
+
+def test_hall_of_fame_reverification_rejects_false_positive() -> None:
+    """Valida que un individuo con f>0 pero falso positivo en SCS/NumPy sea rechazado del HoF."""
+    import json
+    from kuramoto_templates.search.genome import Genome
+    from kuramoto_templates.search.engine import Individual
+
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        cfg = GAConfig(
+            mu_t=0.6929077,
+            num_islands=1,
+            island_pop_size=4,
+            num_generations=1,
+            lam_floor=1e-7,
+        )
+        engine = GAEngine(config=cfg, output_dir=tmp_dir, allow_dirty=True)
+
+        # Usar coordenadas de ID 39260 (que sabemos da falso positivo en SCS y NumPy)
+        x = (0.2494426094558034, 0.25018825224215374, 0.25053408179500397, 0.2498350565070389)
+        phi = (-3.141591616161418, -1.5707953267948964, 1.000000000139778e-06, 1.5707973267948967)
+
+        # Crear un individuo artificial con f > 0 pretendiendo entrar al HoF
+        fake_ind = Individual(
+            id=999,
+            genome=Genome(m=4, K_ref=4, k=(0, 0, 0, 0), sgn=(1, 1, 1, 1), ell=(-2.0, -2.0, -2.0, -2.0), u=(0.0, 0.0, 0.0, 0.0)),
+            phenotype_x=x,
+            phenotype_phi=phi,
+            s_star=0.0,
+            lam_star=2e-7,
+            lam_normalized=2e-7,
+            f=2e-7,  # f > 0
+            f_sel=2e-7,
+            parent_ids=(),
+            operator_name="test_operator",
+            generation=1,
+        )
+
+        engine._update_hall_of_fame(fake_ind)
+
+        # Debe ser rechazado del HoF global y por m
+        assert len(engine.hall_of_fame_global) == 0 or all(ind.id != 999 for ind in engine.hall_of_fame_global)
+        assert 4 not in engine.hall_of_fame_per_m or engine.hall_of_fame_per_m[4].id != 999
+
+        # Debe haberse registrado en run.jsonl como falso_positivo
+        log_path = Path(tmp_dir) / "run.jsonl"
+        assert log_path.exists()
+        found_fp = False
+        with log_path.open("r", encoding="utf-8") as f:
+            for line in f:
+                rec = json.loads(line)
+                if rec.get("type") == "falso_positivo" and rec.get("eval_id") == 999:
+                    found_fp = True
+                    assert "lam_scs" in rec
+                    assert "lam_min_M" in rec
+                    assert rec["lam_min_M"] < cfg.lam_floor
+        assert found_fp, "No se encontró registro de falso_positivo en run.jsonl"
+

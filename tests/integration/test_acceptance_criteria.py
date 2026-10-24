@@ -24,8 +24,8 @@ def test_acceptance_c_seeds_monotonic_improvement() -> None:
     evaluator = SDPEvaluator(EvalConfig(mu_t=0.690, solver_tol=1e-8))
     res_s7 = evaluator.evaluate_phase1(s7_seed.phenotype_x, s7_seed.phenotype_phi)
     assert res_s7.s is not None and res_s7.lam is not None
-    f_seed = compute_continuous_fitness(lam=res_s7.lam, s=res_s7.s, tol=1e-8)
-    assert f_seed > 0.0
+    f_seed = compute_continuous_fitness(lam=res_s7.lam, s=res_s7.s, tol=1e-8, lam_floor=1e-7)
+    assert f_seed < 0.0  # S7 da 4.59e-9 < 1e-7, por lo que f = lam* - 1e-7 < 0
 
     with tempfile.TemporaryDirectory() as tmp_dir:
         # Short run: 3 generations, 2 islands, pop_size=4

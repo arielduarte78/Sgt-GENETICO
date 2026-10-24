@@ -178,7 +178,12 @@ class SDPEvaluator(Evaluator):
 
         if d == 0:
             s_default = max(0.0, float(self.config.mu_t - np.min(x_arr)))
-            f_val = compute_continuous_fitness(lam=0.0, s=s_default, tol=self.config.s_tol)
+            f_val = compute_continuous_fitness(
+                lam=0.0,
+                s=s_default,
+                tol=self.config.s_tol,
+                lam_floor=self.config.lam_floor,
+            )
             return EvalResult(
                 f=f_val,
                 mu=None,
@@ -256,7 +261,12 @@ class SDPEvaluator(Evaluator):
             lam_val = float(lam_var.value)
             s_val = max(0.0, float(s_var.value))
             lam_norm = lam_val / max_m_basis_norm
-            f_val = compute_continuous_fitness(lam=lam_val, s=s_val, tol=self.config.s_tol)
+            f_val = compute_continuous_fitness(
+                lam=lam_val,
+                s=s_val,
+                tol=self.config.s_tol,
+                lam_floor=self.config.lam_floor,
+            )
 
             p_opt_vec = np.clip(N @ z.value, 0.0, 1.0)
             P_mat = p_vector_to_matrix(p_opt_vec, m)

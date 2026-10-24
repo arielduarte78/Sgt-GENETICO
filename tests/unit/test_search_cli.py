@@ -43,6 +43,9 @@ def test_cli_run_status_and_tail(capsys: pytest.CaptureFixture[str]) -> None:
             status_data = json.load(f)
         assert status_data["status"] == "completed"
         assert status_data["generation"] == 2
+        assert status_data["best_m"] > 0
+        assert status_data["total_evaluations"] > 0
+        assert "best_lam" in status_data
 
         # 2. Test 'ga status'
         capsys.readouterr()

@@ -37,23 +37,23 @@ def test_s7_seed_and_roundtrip_measurement() -> None:
 
 
 def test_s7_acceptance_criterion_b() -> None:
-    """CRITICAL ACCEPTANCE TEST (b):
+    """CONTROL S7 BAJO PISO ESPECTRAL (Item 4):
 
-    Semilla S7 evaluada sola con mu_t=0.690: f debe ser > 0.
-    Si no, DETENTE y reporta números crudos (s*, lam*); no ajustes tolerancias ni umbrales.
+    Semilla S7 evaluada sola con mu_t=0.690 y lam_floor=1e-7:
+    Dado que lam* = 4.59e-9 < 1e-7, el fitness queda negativo f = lam* - 1e-7 < 0.
     """
     s7_seed = create_s7_direct_seed(h=0.002, t=0.0)
-    evaluator = SDPEvaluator(EvalConfig(mu_t=0.690, solver_tol=1e-8))
+    evaluator = SDPEvaluator(EvalConfig(mu_t=0.690, solver_tol=1e-8, lam_floor=1e-7))
 
     res = evaluator.evaluate_phase1(s7_seed.phenotype_x, s7_seed.phenotype_phi)
     assert res.s is not None and res.lam is not None
-    f = compute_continuous_fitness(res.s, res.lam, tol=1e-8)
+    f = compute_continuous_fitness(lam=res.lam, s=res.s, tol=1e-8, lam_floor=1e-7)
 
-    print("\nCRITICAL ACCEPTANCE TEST (b) RAW NUMBERS:")
+    print("\nS7 MEASUREMENT WITH lam_floor=1e-7:")
     print(f"  status: {res.status}")
     print(f"  s_star: {res.s:.12e}")
     print(f"  lam_star: {res.lam:.12e}")
-    print(f"  lam_star_normalized: {res.lam_normalized}")
     print(f"  fitness f: {f:.12e}")
 
-    assert f > 0.0, f"Acceptance (b) failed: f = {f} <= 0"
+    # S7 da 4.59e-9 < 1e-7: queda estrictamente negativo con el piso
+    assert f < 0.0, f"S7 debió dar f < 0 con lam_floor=1e-7, dio f = {f}"

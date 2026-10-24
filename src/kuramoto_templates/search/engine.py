@@ -4,11 +4,13 @@ from __future__ import annotations
 
 from collections.abc import Callable
 import json
+import os
 from pathlib import Path
 import time
 from typing import Any
 import numpy as np
 
+from kuramoto_templates.domain.conditions import verify_solution
 from kuramoto_templates.evaluators.config import EvalConfig
 from kuramoto_templates.evaluators.fitness import compute_continuous_fitness
 from kuramoto_templates.evaluators.results import EvalResult
@@ -124,7 +126,13 @@ class GAEngine:
 
         self.evaluator_fn = evaluator_fn
         if self.evaluator_fn is None:
-            sdp_eval = SDPEvaluator(EvalConfig(mu_t=config.mu_t, solver_tol=config.tol))
+            sdp_eval = SDPEvaluator(
+                EvalConfig(
+                    mu_t=config.mu_t,
+                    solver_tol=config.tol,
+                    lam_floor=config.lam_floor,
+                )
+            )
             self._eval_func: EvaluatorFunc = sdp_eval.evaluate_phase1
         else:
             self._eval_func = self.evaluator_fn
@@ -220,7 +228,12 @@ class GAEngine:
                 "eval_time": eval_time,
             }
 
-        f = compute_continuous_fitness(lam=lam_star, s=s_star, tol=self.config.tol)
+        f = compute_continuous_fitness(
+            lam=lam_star,
+            s=s_star,
+            tol=self.config.tol,
+            lam_floor=self.config.lam_floor,
+        )
         f_sel = compute_f_sel(s_star, lam_normalized, tol=self.config.tol)
 
         ind = Individual(
@@ -256,11 +269,54 @@ class GAEngine:
             generation=generation,
         )
 
-        self._update_hall_of_fame(ind)
+        self._update_hall_of_fame(ind, island=island)
         return ind
 
-    def _update_hall_of_fame(self, ind: Individual) -> None:
-        """Update global and per-m Hall of Fame archives."""
+    def _reverify_candidate(self, ind: Individual) -> tuple[bool, float, float]:
+        """Re-verify candidate with f > 0 using SCS (tol=1e-8) and pure NumPy verify_solution."""
+        scs_eval = SDPEvaluator(
+            EvalConfig(
+                mu_t=self.config.mu_t,
+                solver_tol=1e-8,
+                solver_name="SCS",
+                lam_floor=self.config.lam_floor,
+            )
+        )
+        res_scs = scs_eval.evaluate_phase1(ind.phenotype_x, ind.phenotype_phi)
+        lam_scs = float(res_scs.lam) if res_scs.lam is not None else float("-inf")
+
+        lam_min_M = float("-inf")
+        if res_scs.P is not None:
+            v = verify_solution(
+                x=ind.phenotype_x,
+                phi=ind.phenotype_phi,
+                P=res_scs.P,
+                eps=self.config.lam_floor,
+                eps_c=1e-4,
+                theta_tol=1e-4,
+            )
+            lam_min_M = float(v["min_eig_M"])
+
+        is_valid = (lam_scs >= self.config.lam_floor) and (lam_min_M >= self.config.lam_floor)
+        return is_valid, lam_scs, lam_min_M
+
+    def _update_hall_of_fame(self, ind: Individual, island: int = 0) -> None:
+        """Update global and per-m Hall of Fame archives with re-verification for f > 0."""
+        # Re-verify any candidate claiming f > 0 before admittance (when using real evaluator)
+        if self.evaluator_fn is None and ind.f > 0.0:
+            is_valid, lam_scs, lam_min_M = self._reverify_candidate(ind)
+            if not is_valid:
+                self.logger.log_false_positive(
+                    eval_id=ind.id,
+                    m=ind.genome.m,
+                    lam_scs=lam_scs,
+                    lam_min_M=lam_min_M,
+                    lam_floor=self.config.lam_floor,
+                    generation=ind.generation,
+                    island=island,
+                )
+                return
+
         # Global Hall of Fame
         if not self.hall_of_fame_global:
             self.hall_of_fame_global.append(ind)
@@ -332,6 +388,8 @@ class GAEngine:
                 pop.append(ind)
 
             self.islands[island_idx] = pop
+
+        self.update_status_file(status="running")
 
     def _ring_migration(self) -> None:
         """Migrate best individuals in a directional ring between islands."""
@@ -454,6 +512,10 @@ class GAEngine:
             ):
                 self.save_checkpoint(gen)
 
+            self.update_status_file(status="running")
+
+        self.update_status_file(status="completed")
+
         best_global = (
             self.hall_of_fame_global[0] if self.hall_of_fame_global else None
         )
@@ -471,6 +533,28 @@ class GAEngine:
                 for m, ind in self.hall_of_fame_per_m.items()
             },
         }
+
+    def update_status_file(self, status: str = "running") -> None:
+        """Update status.json atomically with current progress and metrics."""
+        status_path = self.output_dir / "status.json"
+        temp_path = self.output_dir / "status.tmp"
+
+        best_ind = self.hall_of_fame_global[0] if self.hall_of_fame_global else None
+        data = {
+            "status": status,
+            "pid": os.getpid(),
+            "generation": self.current_generation,
+            "total_generations": self.config.num_generations,
+            "best_f": best_ind.f if best_ind else -1.0,
+            "best_m": best_ind.genome.m if best_ind else 0,
+            "best_lam": best_ind.lam_star if best_ind else 0.0,
+            "cache_hits": self.cache_hits,
+            "total_evaluations": len(self.cache),
+            "updated_at": time.time(),
+        }
+        with temp_path.open("w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2)
+        os.replace(temp_path, status_path)
 
     def save_checkpoint(self, gen: int) -> Path:
         """Create an atomic checkpoint at generation gen."""

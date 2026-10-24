@@ -77,6 +77,31 @@ class RunLogger:
         with self.filepath.open("a", encoding="utf-8") as f_out:
             f_out.write(json.dumps(entry) + "\n")
 
+    def log_false_positive(
+        self,
+        eval_id: int,
+        m: int,
+        lam_scs: float,
+        lam_min_M: float,
+        lam_floor: float,
+        generation: int,
+        island: int,
+    ) -> None:
+        """Log a candidate rejected as false positive during Hall-of-Fame verification."""
+        entry: dict[str, Any] = {
+            "type": "falso_positivo",
+            "run_id": self.run_id,
+            "eval_id": eval_id,
+            "m": m,
+            "lam_scs": lam_scs,
+            "lam_min_M": lam_min_M,
+            "lam_floor": lam_floor,
+            "generation": generation,
+            "island": island,
+        }
+        with self.filepath.open("a", encoding="utf-8") as f_out:
+            f_out.write(json.dumps(entry) + "\n")
+
 
 def reconstruct_lineage(
     log_path: Path | str, target_eval_id: int

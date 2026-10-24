@@ -19,6 +19,7 @@ class GAConfig:
     mu_t: float
     fitness_noise: float = 1e-9
     tol: float = 1e-8
+    lam_floor: float = 1e-7
     num_islands: int = 4
     island_pop_size: int = 20
     num_generations: int = 20
@@ -47,6 +48,8 @@ class GAConfig:
             raise ValueError(f"fitness_noise must be non-negative, got {self.fitness_noise}.")
         if not (self.tol > 0.0):
             raise ValueError(f"tol must be strictly positive, got {self.tol}.")
+        if not (self.lam_floor > 0.0):
+            raise ValueError(f"lam_floor must be strictly positive, got {self.lam_floor}.")
         if self.num_islands < 1:
             raise ValueError(f"num_islands must be >= 1, got {self.num_islands}.")
         if self.island_pop_size < 2:

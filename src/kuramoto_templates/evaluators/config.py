@@ -32,6 +32,7 @@ class EvalConfig:
     mu_t: float = 0.6929077
     rho: float = 1.0
     s_tol: float = 1e-6
+    lam_floor: float = 1e-7
 
     def __post_init__(self) -> None:
         """Valida la positividad y coherencia de los parámetros."""
@@ -62,6 +63,10 @@ class EvalConfig:
         if self.s_tol <= 0.0:
             raise ValueError(
                 f"s_tol debe ser estrictamente positivo, recibido {self.s_tol}."
+            )
+        if self.lam_floor <= 0.0:
+            raise ValueError(
+                f"lam_floor debe ser estrictamente positivo, recibido {self.lam_floor}."
             )
         valid_solvers = {"CLARABEL", "SCS"}
         if self.solver_name.upper() not in valid_solvers:

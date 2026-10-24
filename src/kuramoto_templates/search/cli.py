@@ -73,34 +73,20 @@ def handle_run(args: argparse.Namespace) -> int:
             file=sys.stderr,
         )
         engine.save_checkpoint(engine.current_generation)
-        _write_status(
-            output_dir,
-            status="interrupted",
-            gen=engine.current_generation,
-            total_gens=config.num_generations,
-            best_f=engine.hall_of_fame_global[0].f if engine.hall_of_fame_global else -1.0,
-        )
+        engine.update_status_file(status="interrupted")
         sys.exit(0)
 
     signal.signal(signal.SIGINT, sig_handler)
     if hasattr(signal, "SIGTERM"):
         signal.signal(signal.SIGTERM, sig_handler)
+    if hasattr(signal, "SIGBREAK"):
+        signal.signal(signal.SIGBREAK, sig_handler)
 
-    _write_status(output_dir, status="running", gen=0, total_gens=config.num_generations)
+    engine.update_status_file(status="running")
 
     try:
         results = engine.run()
-        _write_status(
-            output_dir,
-            status="completed",
-            gen=results["generations"],
-            total_gens=results["generations"],
-            best_f=results["best_f"],
-            best_m=results["best_m"],
-            best_lam=results["best_lam"],
-            cache_hits=results["cache_hits"],
-            evals=results["total_evaluations"],
-        )
+        engine.update_status_file(status="completed")
         print(f"Run completed successfully. Results saved in {output_dir}")
         msg = (
             f"Best fitness f: {results['best_f']:.12e} "
