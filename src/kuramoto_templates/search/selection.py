@@ -30,14 +30,27 @@ class Individual:
     mu_star: float | None = None
 
 
-def compute_f_sel(s_star: float, lam_norm: float, tol: float = 1e-8) -> float:
-    """Compute selection fitness f_sel.
+def compute_f_sel(
+    s_star: float,
+    lam_norm: float,
+    tol: float = 1e-8,
+    lam_floor: float = 1e-7,
+) -> float:
+    """Compute selection fitness f_sel using the 3-tier ordered fitness hierarchy.
 
-    f_sel = -s* if s* > tol else lam_norm.
+    - If lam_norm >= lam_floor and s* <= tol: f_sel = +lam_norm (feasible stable)
+    - If lam_norm >= lam_floor and s* > tol:  f_sel = -s* (stable, deficit in connectivity)
+    - If lam_norm < lam_floor: f_sel = -1.0 + lam_clipped, always worse than any stable candidate.
     """
-    if s_star > tol:
-        return -float(s_star)
-    return float(lam_norm)
+    from kuramoto_templates.evaluators.fitness import compute_continuous_fitness
+
+    return compute_continuous_fitness(
+        lam=lam_norm,
+        s=s_star,
+        tol=tol,
+        lam_floor=lam_floor,
+    )
+
 
 
 def compare_individuals(

@@ -240,7 +240,12 @@ class GAEngine:
             f_sel = (
                 float(entry["f_sel"])
                 if "f_sel" in entry
-                else compute_f_sel(s_star, lam_normalized, tol=self.config.tol)
+                else compute_f_sel(
+                    s_star,
+                    lam_normalized,
+                    tol=self.config.tol,
+                    lam_floor=floor_to_use,
+                )
             )
         else:
             t0 = time.perf_counter()
@@ -272,7 +277,13 @@ class GAEngine:
                     tol=self.config.tol,
                     lam_floor=floor_to_use,
                 )
-                f_sel = compute_f_sel(s_star, lam_normalized, tol=self.config.tol)
+                f_sel = compute_f_sel(
+                    s_star,
+                    lam_normalized,
+                    tol=self.config.tol,
+                    lam_floor=floor_to_use,
+                )
+
 
             self.cache[cache_key] = {
                 "s_star": s_star,

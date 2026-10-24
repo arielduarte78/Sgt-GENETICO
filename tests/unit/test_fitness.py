@@ -56,7 +56,7 @@ def test_continuous_fitness_rejects_negative_tolerance() -> None:
 
 
 def test_continuous_fitness_with_lam_floor_below_floor() -> None:
-    """Valida que si s* <= tol pero lam* < lam_floor, f = lam* - lam_floor < 0."""
+    """Valida que si lam* < lam_floor, f = -1 + lam_clipped <= -1.0."""
     tol = 1e-8
     lam_floor = 1e-7
     # Caso como ID 39260: s* dentro de tolerancia, lam* < 1e-7
@@ -64,9 +64,10 @@ def test_continuous_fitness_with_lam_floor_below_floor() -> None:
     lam_val = 1.715719955466e-08
 
     f = compute_continuous_fitness(lam=lam_val, s=s_val, tol=tol, lam_floor=lam_floor)
-    expected_f = lam_val - lam_floor
-    assert f < 0.0
+    expected_f = -1.0 + (lam_val - lam_floor)
+    assert f < -1.0
     assert math.isclose(f, expected_f, abs_tol=1e-12)
+
 
 
 def test_continuous_fitness_with_lam_floor_above_or_equal_floor() -> None:
@@ -115,4 +116,27 @@ def test_id_39260_float64_phenotype_yields_negative_fitness() -> None:
     assert res.f is not None
     # Con lam_floor=1e-7, aunque Clarabel reporte lam*~1.7e-8 y s*~3.6e-9, f = lam* - 1e-7 < 0
     assert res.f < 0.0, f"ID 39260 debió dar f < 0, pero dio f = {res.f}"
+
+
+def test_ordered_fitness_s7_beats_unstable_small_slack() -> None:
+    """Test requerido: S7 (s*=1.8e-3, lam_hat>0) debe tener f mayor que un estado con lam_hat=-0.33 y s*=1e-8."""
+    tol = 1e-8
+    lam_floor_hat = 1e-5
+
+    # Estado S7: estable (lam_hat > lam_floor_hat), pero s* > tol
+    s_s7 = 1.8e-3
+    lam_s7 = 1.36e-4
+    f_s7 = compute_continuous_fitness(lam=lam_s7, s=s_s7, tol=tol, lam_floor=lam_floor_hat)
+    assert f_s7 == -s_s7  # -0.0018
+
+    # Estado inestable con slack ínfimo: lam_hat = -0.33 < lam_floor_hat, s* = 1e-8
+    s_unstable = 1e-8
+    lam_unstable = -0.33
+    f_unstable = compute_continuous_fitness(lam=lam_unstable, s=s_unstable, tol=tol, lam_floor=lam_floor_hat)
+    assert math.isclose(f_unstable, -1.0 + (-0.33), abs_tol=1e-9)  # -1.33
+
+    # S7 debe superar al inestable SIEMPRE
+    assert f_s7 > f_unstable
+    assert f_s7 - f_unstable > 1.0  # margen amplio (-0.0018 vs -1.33)
+
 

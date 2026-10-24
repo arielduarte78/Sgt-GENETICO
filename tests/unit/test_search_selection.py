@@ -44,11 +44,19 @@ def _make_ind(
 
 
 def test_compute_f_sel() -> None:
-    """f_sel = -s* if s* > tol else lam_norm."""
-    # Slack > tol
-    assert compute_f_sel(s_star=1e-4, lam_norm=0.5, tol=1e-8) == -1e-4
-    # Slack <= tol
-    assert compute_f_sel(s_star=1e-9, lam_norm=0.5, tol=1e-8) == 0.5
+    """f_sel follows the 3-tier ordered fitness hierarchy."""
+    # Slack > tol, stable
+    assert compute_f_sel(s_star=1e-4, lam_norm=0.5, tol=1e-8, lam_floor=1e-7) == -1e-4
+    # Slack <= tol, stable
+    assert compute_f_sel(s_star=1e-9, lam_norm=0.5, tol=1e-8, lam_floor=1e-7) == 0.5
+    # Unstable state (lam_norm < lam_floor): f_sel <= -1.0
+    f_unstable = compute_f_sel(s_star=1e-9, lam_norm=-0.33, tol=1e-8, lam_floor=1e-5)
+    assert f_unstable == -1.33
+    # S7 (stable, s* > tol) beats unstable state with tiny slack
+    f_s7 = compute_f_sel(s_star=1.8e-3, lam_norm=1.36e-4, tol=1e-8, lam_floor=1e-5)
+    assert f_s7 == -1.8e-3
+    assert f_s7 > f_unstable
+
 
 
 def test_compare_individuals_noise_and_tie_breaking() -> None:
