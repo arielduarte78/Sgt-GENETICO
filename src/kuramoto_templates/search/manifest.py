@@ -57,11 +57,10 @@ def create_run_manifest(
     git_hash, is_dirty = _get_git_info(allow_dirty=allow_dirty)
 
     if spawned_seeds is None:
-        # Spawn seeds deterministically using SeedSequence
         seq = np.random.SeedSequence(config.seed)
         total_spawns = config.num_islands * config.num_generations
-        children = seq.spawn(total_spawns)
-        spawned_seeds = [int(c.generate_state(1)[0]) for c in children]
+        children = seq.spawn(10000)
+        spawned_seeds = [int(c.generate_state(1)[0]) for c in children[:total_spawns]]
 
     manifest: dict[str, Any] = {
         "run_id": run_id,

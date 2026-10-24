@@ -1,0 +1,155 @@
+"""Unit and deterministic reproduction tests for GA search engine."""
+
+from pathlib import Path
+import tempfile
+import pytest
+
+from kuramoto_templates.evaluators.results import EvalResult
+from kuramoto_templates.search.checkpoint import load_checkpoint
+from kuramoto_templates.search.config import GAConfig
+from kuramoto_templates.search.engine import GAEngine
+
+
+def mock_analytical_evaluator(
+    x: tuple[float, ...], phi: tuple[float, ...]
+) -> EvalResult:
+    """Mock evaluator with known optimum for acceptance test (a).
+
+    Maximizes target function when phases are close to pi/2, with s* = 0.
+    """
+    m = len(x)
+    target_phi = 0.5
+    dev = sum((p - target_phi) ** 2 for p in phi) / float(m)
+    lam = float(max(1.0 - dev, 0.0))
+    s = 0.0  # strictly feasible
+    return EvalResult(
+        f=lam,
+        mu=0.7,
+        Phi=0.0,
+        lam=lam,
+        s=s,
+        lam_normalized=lam,
+        status="OPTIMAL",
+    )
+
+
+def test_acceptance_a_mock_evaluator_finds_optimum() -> None:
+    """ACCEPTANCE TEST (a):
+
+    Evaluador falso (función analítica barata): el GA halla el óptimo conocido con seed fija.
+    """
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        cfg = GAConfig(
+            mu_t=0.690,
+            num_islands=2,
+            island_pop_size=10,
+            num_generations=15,
+            use_seeds=False,
+            seed=42,
+            checkpoint_interval=5,
+        )
+        engine = GAEngine(
+            config=cfg,
+            output_dir=tmp_dir,
+            evaluator_fn=mock_analytical_evaluator,
+            allow_dirty=True,
+        )
+        results = engine.run()
+
+        # Engine should find fitness very close to the analytical optimum (1.0)
+        best_f = results["best_f"]
+        assert best_f >= 0.95, f"Mock evaluator optimum not found, best_f = {best_f}"
+
+
+def test_engine_bit_for_bit_checkpoint_resume_identity() -> None:
+    """MANDATORY TEST:
+
+    20 generaciones seguidas == 10 + resume + 10, comparando archivos bit a bit.
+    """
+    with tempfile.TemporaryDirectory() as base_tmp:
+        dir_full = Path(base_tmp) / "full_20"
+        dir_split = Path(base_tmp) / "split_10_10"
+
+        cfg_full = GAConfig(
+            mu_t=0.690,
+            num_islands=2,
+            island_pop_size=8,
+            num_generations=20,
+            use_seeds=False,
+            seed=12345,
+            checkpoint_interval=10,
+        )
+
+        # 1. Run 20 generations continuously
+        engine_full = GAEngine(
+            config=cfg_full,
+            output_dir=dir_full,
+            evaluator_fn=mock_analytical_evaluator,
+            run_id="run_reproducibility",
+            allow_dirty=True,
+        )
+        engine_full.run()
+
+        # 2. Run 10 generations, then resume for 10 more
+        cfg_part1 = GAConfig(
+            mu_t=0.690,
+            num_islands=2,
+            island_pop_size=8,
+            num_generations=10,
+            use_seeds=False,
+            seed=12345,
+            checkpoint_interval=10,
+        )
+        engine_part1 = GAEngine(
+            config=cfg_part1,
+            output_dir=dir_split,
+            evaluator_fn=mock_analytical_evaluator,
+            run_id="run_reproducibility",
+            allow_dirty=True,
+        )
+        engine_part1.run()
+
+        # Resume from checkpoint at generation 10 to generation 20
+        cp_path = dir_split / "checkpoints" / "checkpoint_gen_10.json"
+        engine_resume = GAEngine.resume(
+            checkpoint_path=cp_path,
+            total_generations=20,
+            evaluator_fn=mock_analytical_evaluator,
+        )
+        engine_resume.run()
+
+        # 3. Compare final checkpoint state bit a bit
+        cp_full = dir_full / "checkpoints" / "checkpoint_gen_20.json"
+        cp_resumed = dir_split / "checkpoints" / "checkpoint_gen_20.json"
+
+        assert cp_full.exists()
+        assert cp_resumed.exists()
+
+        state_full = load_checkpoint(cp_full)
+        state_resumed = load_checkpoint(cp_resumed)
+
+        # Generations, cache hits, next_id
+        assert state_full.generation == state_resumed.generation == 20
+        assert state_full.cache_hits == state_resumed.cache_hits
+        assert state_full.next_individual_id == state_resumed.next_individual_id
+
+        # Verify island populations have exact identical genetic contents
+        for pop_f, pop_r in zip(state_full.island_populations, state_resumed.island_populations):
+            assert len(pop_f) == len(pop_r)
+            for ind_f, ind_r in zip(pop_f, pop_r):
+                assert ind_f["id"] == ind_r["id"]
+                assert ind_f["genome"] == ind_r["genome"]
+                assert ind_f["phenotype_x"] == ind_r["phenotype_x"]
+                assert ind_f["phenotype_phi"] == ind_r["phenotype_phi"]
+                assert ind_f["f"] == pytest.approx(ind_r["f"])
+                assert ind_f["s_star"] == pytest.approx(ind_r["s_star"])
+                assert ind_f["lam_star"] == pytest.approx(ind_r["lam_star"])
+                assert ind_f["parent_ids"] == ind_r["parent_ids"]
+                assert ind_f["operator_name"] == ind_r["operator_name"]
+
+        # Verify Hall of Fame bit-for-bit
+        assert len(state_full.hall_of_fame_global) == len(state_resumed.hall_of_fame_global)
+        for hof_f, hof_r in zip(state_full.hall_of_fame_global, state_resumed.hall_of_fame_global):
+            assert hof_f["id"] == hof_r["id"]
+            assert hof_f["genome"] == hof_r["genome"]
+            assert hof_f["f"] == pytest.approx(hof_r["f"])
