@@ -58,3 +58,7 @@ warn_unused_ignores = true
 testpaths = ["tests"]
 pythonpath = ["src"]
 addopts = "-v --strict-markers"
+markers = [
+    "cited: pruebas de regresion contra literatura externa citada",
+]
+
