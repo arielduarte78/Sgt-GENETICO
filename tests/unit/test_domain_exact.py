@@ -8,14 +8,12 @@ Referencias:
 from __future__ import annotations
 
 import math
+
 import numpy as np
-import pytest
 
 from kuramoto_templates.cases.c4 import get_c4_template
 from kuramoto_templates.domain.conditions import (
-    build_af_matrix,
     build_lw_matrix,
-    build_m_matrix,
     c_a,
     connectivity,
     equilibrium_residual,
@@ -30,11 +28,11 @@ def test_equilibrium_antisymmetry_identity() -> None:
 
     Qué valida:
         Para cualquier configuración (x, phi, P), la suma ponderada por los tamaños de cluster
-        de los residuos de equilibrio F_a se anula idénticamente a precisión de máquina (rtol <= 1e-12):
-            sum_{a=1}^m x_a F_a = sum_{a < b} x_a x_b P_ab [sin(phi_a - phi_b) + sin(phi_b - phi_a)] = 0.
+        de los residuos de equilibrio F_a se anula idénticamente (rtol <= 1e-12):
+            sum_{a=1}^m x_a F_a = sum_{a < b} x_a x_b P_ab [sin(phi_a-phi_b) + sin(phi_b-phi_a)] = 0
 
     De dónde viene el valor esperado:
-        Identidad analítica exacta derivada de la antisimetría de la función seno: sin(-theta) = -sin(theta),
+        Identidad analítica exacta por antisimetría de la función seno: sin(-theta) = -sin(theta),
         válida para cualquier grafo y plantilla de Kuramoto (O'Keeffe 2026, Sección III, Ec. 6).
     """
     rng = np.random.default_rng(seed=42)
@@ -43,7 +41,6 @@ def test_equilibrium_antisymmetry_identity() -> None:
     x = tuple(float(v) for v in raw_x / np.sum(raw_x))
     phi = tuple(float(v) for v in rng.uniform(-math.pi, math.pi, size=m))
 
-    # Matriz P simétrica con diagonal 1 y entradas en [0, 1]
     raw_p = rng.uniform(0.0, 1.0, size=(m, m))
     p_sym = 0.5 * (raw_p + raw_p.T)
     np.fill_diagonal(p_sym, 1.0)
@@ -57,7 +54,7 @@ def test_equilibrium_antisymmetry_identity() -> None:
 
 
 def test_laplacian_ones_nullspace_identity() -> None:
-    """Valida que el vector constante ones pertenezca al espacio nulo del Laplaciano ponderado L_w.
+    """Valida que el vector constante ones pertenezca al espacio nulo del Laplaciano L_w.
 
     Qué valida:
         L_w(p) @ ones == 0 exactamente para cualquier plantilla y vector de densidades p.
@@ -106,7 +103,7 @@ def test_c4_exact_theoretical_properties() -> None:
           - c_a = x_a + sum_{vecinos} (1/4) cos(+-pi/2) = 1/4 + 0 = 1/4.
           - d_a = 1/4 * (1 + 1 + 1) = 3/4 => mu = 3/4.
           - cos(phi_a - phi_b) es 0 para vecinos (distancia pi/2) y P_ab = 0 para opuestos.
-            Por tanto todas las aristas con P_ab > 0 tienen cos(delta phi) = 0, luego L_w = 0 y M = 0.
+            Por tanto todas las aristas con P_ab > 0 tienen cos = 0, luego L_w = 0 y M = 0.
     """
     c4 = get_c4_template()
 

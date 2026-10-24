@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 from dataclasses import FrozenInstanceError
 
 import pytest
@@ -95,21 +96,28 @@ def test_condition_signatures_raise_without_p() -> None:
         projected_laplacian(t_no_p)
 
 
-def test_condition_signatures_raise_not_implemented_with_p() -> None:
-    """Verifica que las firmas de condiciones expresen NotImplementedError de esqueleto."""
+def test_condition_computations_with_p() -> None:
+    """Verifica que las firmas de condiciones computen valores finitos y coherentes."""
     t = Template(x=(0.5, 0.5), phi=(0.0, 1.0), P=((1.0, 0.5), (0.5, 1.0)))
 
-    with pytest.raises(NotImplementedError, match="TODO"):
-        degrees(t)
+    deg = degrees(t)
+    assert len(deg) == 2
+    assert math.isclose(deg[0], 0.75)
+    assert math.isclose(deg[1], 0.75)
 
-    with pytest.raises(NotImplementedError, match="TODO"):
-        connectivity(t)
+    conn = connectivity(t)
+    assert math.isclose(conn, 0.75)
 
-    with pytest.raises(NotImplementedError, match="TODO"):
-        equilibrium_residual(t)
+    res = equilibrium_residual(t)
+    assert len(res) == 2
+    assert math.isclose(res[0] + res[1], 0.0, abs_tol=1e-12)
 
-    with pytest.raises(NotImplementedError, match="TODO"):
-        c_a(t)
+    c_vals = c_a(t)
+    assert len(c_vals) == 2
+    assert c_vals[0] > 0.0
 
-    with pytest.raises(NotImplementedError, match="TODO"):
-        projected_laplacian(t)
+    lap = projected_laplacian(t)
+    assert len(lap) == 1
+    assert len(lap[0]) == 1
+    assert lap[0][0] > 0.0
+
