@@ -27,6 +27,7 @@ class Individual:
     generation: int = 0
     solver_status: str = "OPTIMAL"
     eval_time: float = 0.0
+    mu_star: float | None = None
 
 
 def compute_f_sel(s_star: float, lam_norm: float, tol: float = 1e-8) -> float:

@@ -236,8 +236,12 @@ class ScaledSDPEvaluator:
     ) -> None:
         self.config = config or EvalConfig()
         self.plain_evaluator = SDPEvaluator(self.config)
-        # lam_floor_hat calibrado: por defecto 1e-5 o especificado
-        self.lam_floor_hat = 1e-5 if lam_floor_hat is None else float(lam_floor_hat)
+        # lam_floor_hat calibrado: por defecto self.config.lam_floor_hat (1e-5) o especificado
+        self.lam_floor_hat = (
+            float(lam_floor_hat)
+            if lam_floor_hat is not None
+            else getattr(self.config, "lam_floor_hat", 1e-5)
+        )
 
     def evaluate_phase1(
         self,
@@ -588,7 +592,14 @@ class ScaledSDPEvaluator:
         P: tuple[tuple[float, ...], ...],
         genome: Any | None = None,
     ) -> dict[str, Any]:
-        """Triple verificación independiente: NumPy float64, mpmath 50 dígitos y solver SCS."""
+        """Cuádruple verificación independiente (Antidoping Robusto):
+        a) Re-evaluación con Clarabel (tol=1e-9) dando lam_hat >= lam_floor_hat.
+        b) Verificación en NumPy float64 sobre P: max |F| <= 1e-12, min c_a >= eps_c,
+           min d_a >= mu_t - s_tol, y eigvalsh(G_hat) >= lam_floor_hat.
+        c) Verificación en mpmath a 50 dígitos (mp.eigsy) sobre G_hat(P) >= lam_floor_hat.
+        d) Segundo solver SCS con max_iters=20000 (si da OPTIMAL_INACCURATE, el veredicto
+           depende de Clarabel 1e-9 + NumPy + mpmath 50 dígitos).
+        """
         x_arr = np.asarray(x, dtype=float)
         phi_arr = np.asarray(phi, dtype=float)
         m = len(x_arr)
@@ -603,53 +614,102 @@ class ScaledSDPEvaluator:
         Q = scipy.linalg.null_space(np.ones((1, m), dtype=float))
         M = Q.T @ L_w @ Q
 
-        # 1. NumPy float64
+        # 1. NumPy float64 sobre P
+        A_F = build_af_matrix(x_arr, phi_arr)
+        max_abs_F = float(np.max(np.abs(A_F @ p_vec)))
+        A_c = build_ac_matrix(x_arr, phi_arr)
+        min_c_a = float(np.min(x_arr + A_c @ p_vec))
+        A_d = build_ad_matrix(x_arr)
+        min_d_a = float(np.min(x_arr + A_d @ p_vec))
+
         lam_min_M = float(np.min(np.linalg.eigvalsh(M)))
         if T is not None and h_eff >= 1e-4:
             G_hat = (T.T @ L_w @ T) / (h_eff**2)
             lam_min_G = float(np.min(np.linalg.eigvalsh(G_hat)))
         else:
+            G_hat = M
             lam_min_G = lam_min_M
 
-        # 2. mpmath 50 dígitos con mp.eigsy sobre T^T L_w T
+        floor_target = (
+            self.lam_floor_hat
+            if (T is not None and h_eff >= 1e-4)
+            else self.config.lam_floor
+        )
+
+        numpy_ok = bool(
+            max_abs_F <= 1e-12
+            and min_c_a >= self.config.eps_c
+            and min_d_a >= (self.config.mu_t - self.config.s_tol)
+            and lam_min_G >= floor_target
+        )
+
+        # 2. mpmath 50 dígitos con mp.eigsy sobre G_hat
         mpmath.mp.dps = 50
-        dim = T.shape[1] if T is not None else m - 1
-        A_target = (T.T @ L_w @ T) if T is not None else M
+        dim = G_hat.shape[0]
         M_mp = mpmath.mp.matrix(dim, dim)
         for r in range(dim):
             for c in range(dim):
-                M_mp[r, c] = mpmath.mp.mpf(str(A_target[r, c]))
+                M_mp[r, c] = mpmath.mp.mpf(str(G_hat[r, c]))
         eigs_mp = mpmath.mp.eigsy(M_mp, eigvals_only=True)
         min_eig_mp = float(min(eigs_mp))
+        mpmath_ok = bool(min_eig_mp >= floor_target)
 
-        # 3. Segundo solver: SCS
+        # 3. Re-evaluación con Clarabel (tol=1e-9)
+        cl9_cfg = EvalConfig(
+            mu_t=self.config.mu_t,
+            solver_tol=1e-9,
+            solver_name="CLARABEL",
+            lam_floor=self.config.lam_floor,
+            lam_floor_hat=self.lam_floor_hat,
+        )
+        cl9_ev = ScaledSDPEvaluator(config=cl9_cfg, lam_floor_hat=self.lam_floor_hat)
+        res_cl9 = cl9_ev.evaluate_phase1(x, phi, genome=genome)
+        lam_cl9 = float(res_cl9.lam) if res_cl9.lam is not None else float("-inf")
+        cl9_ok = bool(
+            res_cl9.status in ("OPTIMAL", "OPTIMAL_INACCURATE")
+            and lam_cl9 >= floor_target
+            and res_cl9.s is not None
+            and res_cl9.s <= self.config.s_tol
+        )
+
+        # 4. Solver SCS con max_iters=20000
         scs_cfg = EvalConfig(
             mu_t=self.config.mu_t,
             solver_tol=1e-8,
             solver_name="SCS",
-            lam_floor=self.lam_floor_hat,
+            lam_floor=self.config.lam_floor,
+            lam_floor_hat=self.lam_floor_hat,
         )
         scs_ev = ScaledSDPEvaluator(config=scs_cfg, lam_floor_hat=self.lam_floor_hat)
         res_scs = scs_ev.evaluate_phase1(x, phi, genome=genome)
         lam_scs = float(res_scs.lam) if res_scs.lam is not None else float("-inf")
 
-        sign_np = 1 if lam_min_G > 0 else (-1 if lam_min_G < 0 else 0)
-        sign_mp = 1 if min_eig_mp > 0 else (-1 if min_eig_mp < 0 else 0)
-        sign_scs = 1 if lam_scs > 0 else (-1 if lam_scs < 0 else 0)
+        if res_scs.status == "OPTIMAL":
+            scs_ok = bool(lam_scs >= floor_target)
+        elif res_scs.status == "OPTIMAL_INACCURATE":
+            # Si da OPTIMAL_INACCURATE, veredicto depende de Cl(1e-9) + NumPy + mpmath(50d)
+            scs_ok = True
+        else:
+            scs_ok = False
 
-        signs_coincide = (sign_np == sign_mp == sign_scs)
-        above_floor = (lam_min_G >= self.lam_floor_hat and lam_scs >= self.lam_floor_hat)
-
-        is_valid = bool(signs_coincide and above_floor)
+        is_valid = bool(cl9_ok and numpy_ok and mpmath_ok and scs_ok)
 
         return {
             "is_valid": is_valid,
+            "lam_cl9": lam_cl9,
             "lam_np": lam_min_G,
             "lam_mp": min_eig_mp,
             "lam_scs": lam_scs,
             "lam_min_M": lam_min_M,
-            "signs_coincide": signs_coincide,
-            "above_floor": above_floor,
+            "max_abs_F": max_abs_F,
+            "min_c_a": min_c_a,
+            "min_d_a": min_d_a,
+            "status_scs": res_scs.status,
+            "status_cl9": res_cl9.status,
+            "cl9_ok": cl9_ok,
+            "numpy_ok": numpy_ok,
+            "mpmath_ok": mpmath_ok,
+            "scs_ok": scs_ok,
         }
 
     def _get_solver_kwargs(self) -> dict[str, Any]:
@@ -672,6 +732,7 @@ class ScaledSDPEvaluator:
                 "solver": cp.SCS,
                 "eps_abs": tol,
                 "eps_rel": tol,
+                "max_iters": 20000,
                 "verbose": False,
             }
         else:

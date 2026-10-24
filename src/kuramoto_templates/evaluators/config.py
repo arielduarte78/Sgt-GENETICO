@@ -33,6 +33,12 @@ class EvalConfig:
     rho: float = 1.0
     s_tol: float = 1e-6
     lam_floor: float = 1e-7
+    # lam_floor_hat: Piso calibrado para evaluador escalado (default 1e-5).
+    # Justificación de auditoría: en 200 individuos, los desacuerdos > 1e-4 provienen exclusivamente
+    # de fallos de convergencia de SCS (OPTIMAL_INACCURATE). El desacuerdo Clarabel(1e-8) vs
+    # Clarabel(1e-9) es <= 7.73e-8 y con SCS convergido es <= 5.04e-6. El valor 1e-5 representa
+    # >100x el desacuerdo de Clarabel y >2x el de SCS convergido, preservando S7 (~3.2e-4).
+    lam_floor_hat: float = 1e-5
 
     def __post_init__(self) -> None:
         """Valida la positividad y coherencia de los parámetros."""
@@ -67,6 +73,10 @@ class EvalConfig:
         if self.lam_floor <= 0.0:
             raise ValueError(
                 f"lam_floor debe ser estrictamente positivo, recibido {self.lam_floor}."
+            )
+        if self.lam_floor_hat <= 0.0:
+            raise ValueError(
+                f"lam_floor_hat debe ser estrictamente positivo, recibido {self.lam_floor_hat}."
             )
         valid_solvers = {"CLARABEL", "SCS"}
         if self.solver_name.upper() not in valid_solvers:

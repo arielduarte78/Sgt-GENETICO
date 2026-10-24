@@ -1,13 +1,14 @@
-"""Island-model Genetic Algorithm search engine with ring migration and deterministic checkpoints."""
+"""Island-model GA search engine with ring migration and deterministic checkpoints."""
 
 from __future__ import annotations
 
-from collections.abc import Callable
 import json
 import os
-from pathlib import Path
 import time
+from collections.abc import Callable
+from pathlib import Path
 from typing import Any
+
 import numpy as np
 
 from kuramoto_templates.domain.conditions import verify_solution
@@ -71,6 +72,7 @@ def _individual_to_dict(ind: Individual) -> dict[str, Any]:
         "generation": ind.generation,
         "solver_status": ind.solver_status,
         "eval_time": ind.eval_time,
+        "mu_star": ind.mu_star,
     }
 
 
@@ -100,6 +102,7 @@ def _dict_to_individual(d: dict[str, Any]) -> Individual:
         generation=int(d.get("generation", 0)),
         solver_status=str(d.get("solver_status", "OPTIMAL")),
         eval_time=float(d.get("eval_time", 0.0)),
+        mu_star=float(d["mu_star"]) if d.get("mu_star") is not None else None,
     )
 
 
@@ -130,11 +133,15 @@ class GAEngine:
                 mu_t=config.mu_t,
                 solver_tol=config.tol,
                 lam_floor=config.lam_floor,
+                lam_floor_hat=getattr(config, "lam_floor_hat", 1e-5),
             )
             if getattr(config, "evaluator", "plain") == "scaled":
                 from kuramoto_templates.evaluators.scaled import ScaledSDPEvaluator
 
-                eval_inst: Any = ScaledSDPEvaluator(eval_cfg)
+                eval_inst: Any = ScaledSDPEvaluator(
+                    eval_cfg,
+                    lam_floor_hat=getattr(config, "lam_floor_hat", 1e-5),
+                )
             else:
                 eval_inst = SDPEvaluator(eval_cfg)
             self._eval_func = eval_inst.evaluate_phase1
@@ -201,7 +208,9 @@ class GAEngine:
             x, phi = to_phenotype(genome)
 
         cache_key = json.dumps(
-            [round(float(v), 10) for v in x] + [round(float(v), 10) for v in phi]
+            [round(float(v), 10) for v in x]
+            + [round(float(v), 10) for v in phi]
+            + list(genome.k)
         )
 
         if cache_key in self.cache:
@@ -215,7 +224,7 @@ class GAEngine:
         else:
             t0 = time.perf_counter()
             try:
-                res = self._eval_func(x, phi, genome=genome)  # type: ignore[call-arg]
+                res = self._eval_func(x, phi, genome=genome)
             except TypeError:
                 res = self._eval_func(x, phi)
             eval_time = time.perf_counter() - t0
@@ -280,32 +289,133 @@ class GAEngine:
         return ind
 
     def _reverify_candidate(self, ind: Individual) -> tuple[bool, float, float]:
-        """Re-verify candidate with f > 0 using SCS (tol=1e-8) and pure NumPy verify_solution."""
-        scs_eval = SDPEvaluator(
-            EvalConfig(
+        """Cuádruple verificación independiente (Antidoping Robusto) para Hall of Fame con f > 0."""
+        is_scaled = getattr(self.config, "evaluator", "plain") == "scaled"
+        floor_val = (
+            getattr(self.config, "lam_floor_hat", 1e-5)
+            if is_scaled
+            else self.config.lam_floor
+        )
+
+        if is_scaled:
+            from kuramoto_templates.evaluators.scaled import ScaledSDPEvaluator
+
+            # a) Re-evaluación con Clarabel a tol=1e-9
+            cl9_cfg = EvalConfig(
                 mu_t=self.config.mu_t,
-                solver_tol=1e-8,
-                solver_name="SCS",
+                solver_tol=1e-9,
+                solver_name="CLARABEL",
+                lam_floor=self.config.lam_floor,
+                lam_floor_hat=floor_val,
+            )
+            cl9_eval = ScaledSDPEvaluator(cl9_cfg, lam_floor_hat=floor_val)
+            res_cl9 = cl9_eval.evaluate_phase1(
+                ind.phenotype_x, ind.phenotype_phi, genome=ind.genome
+            )
+            lam_cl9 = float(res_cl9.lam) if res_cl9.lam is not None else float("-inf")
+
+            if (
+                res_cl9.status not in ("OPTIMAL", "OPTIMAL_INACCURATE")
+                or lam_cl9 < floor_val
+                or res_cl9.s is None
+                or res_cl9.s > self.config.tol
+                or res_cl9.P is None
+            ):
+                return False, lam_cl9, float("-inf")
+
+            res_trip = cl9_eval.verify_candidate_triplet(
+                ind.phenotype_x, ind.phenotype_phi, res_cl9.P, genome=ind.genome
+            )
+            is_valid = bool(res_trip["is_valid"])
+            return is_valid, float(res_trip["lam_scs"]), float(res_trip["lam_np"])
+
+        else:
+            # Evaluador plano:
+            # a) Re-evaluación con Clarabel a tol=1e-9
+            cl9_cfg = EvalConfig(
+                mu_t=self.config.mu_t,
+                solver_tol=1e-9,
+                solver_name="CLARABEL",
                 lam_floor=self.config.lam_floor,
             )
-        )
-        res_scs = scs_eval.evaluate_phase1(ind.phenotype_x, ind.phenotype_phi)
-        lam_scs = float(res_scs.lam) if res_scs.lam is not None else float("-inf")
+            cl9_plain_eval = SDPEvaluator(cl9_cfg)
+            res_cl9 = cl9_plain_eval.evaluate_phase1(ind.phenotype_x, ind.phenotype_phi)
+            lam_cl9 = float(res_cl9.lam) if res_cl9.lam is not None else float("-inf")
 
-        lam_min_M = float("-inf")
-        if res_scs.P is not None:
+            if (
+                res_cl9.status not in ("OPTIMAL", "OPTIMAL_INACCURATE")
+                or lam_cl9 < floor_val
+                or res_cl9.s is None
+                or res_cl9.s > self.config.tol
+                or res_cl9.P is None
+            ):
+                return False, lam_cl9, float("-inf")
+
+            # b) Pure NumPy verify_solution on P
             v = verify_solution(
                 x=ind.phenotype_x,
                 phi=ind.phenotype_phi,
-                P=res_scs.P,
+                P=res_cl9.P,
                 eps=self.config.lam_floor,
                 eps_c=1e-4,
                 theta_tol=1e-4,
             )
             lam_min_M = float(v["min_eig_M"])
+            numpy_ok = bool(
+                v["is_valid"]
+                and float(v["max_F"]) <= 1e-12
+                and float(v["min_c"]) >= 1e-4
+                and float(v["mu"]) >= (self.config.mu_t - self.config.tol)
+                and lam_min_M >= self.config.lam_floor
+            )
 
-        is_valid = (lam_scs >= self.config.lam_floor) and (lam_min_M >= self.config.lam_floor)
-        return is_valid, lam_scs, lam_min_M
+            import mpmath  # type: ignore[import-untyped]
+            import scipy.linalg  # type: ignore[import-untyped]
+
+            from kuramoto_templates.domain.conditions import (
+                build_lw_matrix,
+                p_matrix_to_vector,
+            )
+
+            mpmath.mp.dps = 50
+            m_size = ind.genome.m
+            p_vec = p_matrix_to_vector(np.asarray(res_cl9.P, dtype=float))
+            L_w = build_lw_matrix(
+                np.asarray(ind.phenotype_x, dtype=float),
+                np.asarray(ind.phenotype_phi, dtype=float),
+                p_vec,
+            )
+            Q = scipy.linalg.null_space(np.ones((1, m_size), dtype=float))
+            M = Q.T @ L_w @ Q
+            dim = m_size - 1
+            M_mp = mpmath.mp.matrix(dim, dim)
+            for r in range(dim):
+                for c in range(dim):
+                    M_mp[r, c] = mpmath.mp.mpf(str(M[r, c]))
+            eigs_mp = mpmath.mp.eigsy(M_mp, eigvals_only=True)
+            min_eig_mp = float(min(eigs_mp))
+            mpmath_ok = bool(min_eig_mp >= self.config.lam_floor)
+
+            # d) SCS tol=1e-8 con max_iters=20000
+            scs_eval = SDPEvaluator(
+                EvalConfig(
+                    mu_t=self.config.mu_t,
+                    solver_tol=1e-8,
+                    solver_name="SCS",
+                    lam_floor=self.config.lam_floor,
+                )
+            )
+            res_scs = scs_eval.evaluate_phase1(ind.phenotype_x, ind.phenotype_phi)
+            lam_scs = float(res_scs.lam) if res_scs.lam is not None else float("-inf")
+            if res_scs.status == "OPTIMAL":
+                scs_ok = bool(lam_scs >= self.config.lam_floor)
+            elif res_scs.status == "OPTIMAL_INACCURATE":
+                scs_ok = True  # Verdict depends on Clarabel 1e-9 + NumPy + mpmath 50d
+            else:
+                scs_ok = False
+
+            is_valid = bool(numpy_ok and mpmath_ok and scs_ok)
+            return is_valid, lam_scs, lam_min_M
 
     def _update_hall_of_fame(self, ind: Individual, island: int = 0) -> None:
         """Update global and per-m Hall of Fame archives with re-verification for f > 0."""
@@ -313,16 +423,78 @@ class GAEngine:
         if self.evaluator_fn is None and ind.f > 0.0:
             is_valid, lam_scs, lam_min_M = self._reverify_candidate(ind)
             if not is_valid:
+                floor_val = (
+                    getattr(self.config, "lam_floor_hat", 1e-5)
+                    if getattr(self.config, "evaluator", "plain") == "scaled"
+                    else self.config.lam_floor
+                )
                 self.logger.log_false_positive(
                     eval_id=ind.id,
                     m=ind.genome.m,
                     lam_scs=lam_scs,
                     lam_min_M=lam_min_M,
-                    lam_floor=self.config.lam_floor,
+                    lam_floor=floor_val,
                     generation=ind.generation,
                     island=island,
                 )
                 return
+
+        # Criterio de comparación real: Fase II para individuos en Hall-of-Fame con f > 0
+        if ind.f > 0.0:
+            try:
+                if getattr(self.config, "evaluator", "plain") == "scaled":
+                    from kuramoto_templates.evaluators.scaled import ScaledSDPEvaluator
+
+                    eval_p2 = ScaledSDPEvaluator(
+                        EvalConfig(
+                            mu_t=self.config.mu_t,
+                            solver_tol=1e-8,
+                            lam_floor=self.config.lam_floor,
+                            lam_floor_hat=getattr(self.config, "lam_floor_hat", 1e-5),
+                        ),
+                        lam_floor_hat=getattr(self.config, "lam_floor_hat", 1e-5),
+                    )
+                    res_p2 = eval_p2.evaluate_phase2(
+                        ind.phenotype_x,
+                        ind.phenotype_phi,
+                        eps=getattr(self.config, "lam_floor_hat", 1e-5),
+                        genome=ind.genome,
+                    )
+                else:
+                    eval_p2_plain = SDPEvaluator(
+                        EvalConfig(
+                            mu_t=self.config.mu_t,
+                            solver_tol=1e-8,
+                            lam_floor=self.config.lam_floor,
+                        )
+                    )
+                    res_p2 = eval_p2_plain.evaluate_phase2(
+                        ind.phenotype_x,
+                        ind.phenotype_phi,
+                        eps=self.config.lam_floor,
+                    )
+                mu_star_val = float(res_p2.mu) if res_p2.mu is not None else None
+            except Exception:
+                mu_star_val = None
+
+            if mu_star_val is not None:
+                ind = Individual(
+                    id=ind.id,
+                    genome=ind.genome,
+                    phenotype_x=ind.phenotype_x,
+                    phenotype_phi=ind.phenotype_phi,
+                    s_star=ind.s_star,
+                    lam_star=ind.lam_star,
+                    lam_normalized=ind.lam_normalized,
+                    f=ind.f,
+                    f_sel=ind.f_sel,
+                    parent_ids=ind.parent_ids,
+                    operator_name=ind.operator_name,
+                    generation=ind.generation,
+                    solver_status=ind.solver_status,
+                    eval_time=ind.eval_time,
+                    mu_star=mu_star_val,
+                )
 
         # Global Hall of Fame
         if not self.hall_of_fame_global:
@@ -533,6 +705,7 @@ class GAEngine:
             "best_m": best_global.genome.m if best_global else -1,
             "best_lam": best_global.lam_star if best_global else 0.0,
             "best_s": best_global.s_star if best_global else 1.0,
+            "best_mu_star": best_global.mu_star if best_global else None,
             "cache_hits": self.cache_hits,
             "total_evaluations": len(self.cache),
             "hall_of_fame_per_m": {
@@ -555,6 +728,7 @@ class GAEngine:
             "best_f": best_ind.f if best_ind else -1.0,
             "best_m": best_ind.genome.m if best_ind else 0,
             "best_lam": best_ind.lam_star if best_ind else 0.0,
+            "best_mu_star": best_ind.mu_star if best_ind else None,
             "cache_hits": self.cache_hits,
             "total_evaluations": len(self.cache),
             "updated_at": time.time(),

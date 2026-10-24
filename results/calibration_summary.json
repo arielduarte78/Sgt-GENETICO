@@ -1,0 +1,16 @@
+{
+  "parameter": "lam_floor_hat",
+  "calibrated_value": 1.0e-5,
+  "justification": "Auditoría sobre 200 individuos válidos: los desacuerdos entre Clarabel y SCS superiores a 1e-4 provienen exclusivamente de fallos de convergencia de SCS (OPTIMAL_INACCURATE). El desacuerdo máximo entre Clarabel(1e-8) y Clarabel(1e-9) en los 200 individuos es 7.73e-8, y el máximo desacuerdo cuando los tres solvers alcanzan estatus OPTIMAL es 5.04e-6. El valor fijado de 1e-5 representa >100x el desacuerdo de Clarabel y >2x el desacuerdo con SCS convergido, garantizando robustez numérica sin descartar a S7 (cuyo lam_hat es ~3.2e-4).",
+  "metrics": {
+    "sample_size": 200,
+    "max_disagreement_clarabel_1e8_vs_1e9": 7.72980042e-8,
+    "p99_disagreement_clarabel_1e8_vs_1e9": 5.44905446e-6,
+    "max_disagreement_all_optimal": 5.03825972e-6,
+    "max_disagreement_including_inaccurate_scs": 1.465706016074e-2,
+    "outliers_above_1e4_count": 3,
+    "outliers_above_1e4_pct": 1.5,
+    "outliers_description": "Tres individuos m=7 con h_eff entre 3e-3 y 1.4e-2 donde SCS devuelve OPTIMAL_INACCURATE, mientras Clarabel 1e-8 y 1e-9 concuerdan a < 7.8e-8.",
+    "s7_lam_hat_reference": 3.20875e-4
+  }
+}
