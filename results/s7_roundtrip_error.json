@@ -1,0 +1,11 @@
+{
+  "h": 0.002,
+  "t": 0.0,
+  "max_mass_error": 0.0,
+  "max_phase_error": 1.0000000010279564e-06,
+  "s_star_direct": 2.7255656943953336e-11,
+  "lam_direct": 4.589499761589064e-09,
+  "s_star_genome": 0.0,
+  "lam_genome": 3.700481643572929e-09,
+  "lam_abs_diff": 8.890181180161345e-10
+}
