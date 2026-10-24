@@ -77,6 +77,8 @@ Márgenes espectrales $\varepsilon < \sim 10^{-7}$ no son resolubles con toleran
 - Para $\varepsilon \approx 10^{-6} \dots 10^{-7}$, el solver entra en zona de inexactitud y reporta `OPTIMAL_INACCURATE` (registrado explícitamente en `EvalResult.solver_info["optimal_inaccurate"] = 1`).
 - Para $\varepsilon \le 10^{-8}$, el cono semidefinido colapsa frente al ruido de redondeo, produciendo fallos de convergencia o soluciones no acotadas.
 - La curva completa de degradación está documentada y guardada como artefacto en `results/numerical_floor_s7.json` y `results/numerical_floor_s7.md`.
+- **Regla de interpretación física:** En la Fase I ($\max \lambda - \rho s$), $s^* \approx 0$ **NO implica estabilidad**; solo $\lambda^* \ge \text{piso}$ la implica. El slack $s^* \approx 0$ puede coexistir con $\lambda^* < 0$ cuando el solver compensa grado a costa de estabilidad espectral.
+
 
 ---
 

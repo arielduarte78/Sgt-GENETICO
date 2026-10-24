@@ -35,8 +35,20 @@ Este documento registra sistemáticamente cada afirmación teórica, cota de con
 
 ---
 
+---
+
 ## Nota Técnica: Comparación de Conectividad en $S_7$ ($0.69118$ vs $0.69272$)
 
 El SDP da el óptimo para (x,phi) fijos del ansatz; el miembro citado probablemente usa otros (x,phi); no verificable sin el Supplementary Material.
+
+## Nota Técnica: Estabilidad Espectral y Slack de Grado
+
+En la formulación de Fase I ($\max \lambda - \rho s$ s.a. $d \ge \mu_t - s$, $M \succeq \lambda I$, $s \ge 0$):
+$s^* \approx 0$ **NO implica estabilidad**; solo $\lambda^* \ge \text{piso}$ la implica. El slack $s^* \approx 0$ puede coexistir con $\lambda^* < 0$ cuando el solver compensa grado a expensas de estabilidad espectral.
+
+## Nota Técnica: Conectividad Apéndice A en $S_7$ ($h=0.02$)
+
+Para $h = 0.02, t = 0$, la matriz $P$ analítica del Apéndice A da una conectividad $\mu(\text{Apéndice A}, h=0.02) = 0.6735$, frente a $0.6906$ citado en el preprint.
+
 
 
