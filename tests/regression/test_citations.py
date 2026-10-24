@@ -9,8 +9,6 @@ from __future__ import annotations
 
 import math
 
-import mpmath
-import numpy as np
 import pytest
 
 from kuramoto_templates.cases.canale import get_canale_template
@@ -48,9 +46,13 @@ def test_canale_eight_cluster_bound() -> None:
     mu = connectivity(template)
     target = 11.0 / 16.0
     gap = target - mu
-    print(f"\n[CANALE REGRESSION] Conectividad obtenida: {mu:.6f}, Target: {target:.6f}, Brecha: {gap:+.6e}")
+    print(
+        f"\n[CANALE REGRESSION] Conectividad obtenida: {mu:.6f}, "
+        f"Target: {target:.6f}, Brecha: {gap:+.6e}"
+    )
     assert target - 5e-3 <= mu <= target + 1e-6, (
-        f"Conectividad de Canale {mu} fuera del intervalo esperado [{target - 5e-3}, {target + 1e-6}]."
+        f"Conectividad de Canale {mu} fuera del intervalo esperado "
+        f"[{target - 5e-3}, {target + 1e-6}]."
     )
 
 

@@ -43,10 +43,15 @@ def test_canale_is_explicit_stub() -> None:
         get_canale_template()
 
 
-def test_s7_is_explicit_stub() -> None:
-    """Verifica que la familia S7 sea un stub honesto con parámetros h y t."""
-    with pytest.raises(NotImplementedError, match="TODO: Implementar corrección"):
-        get_s7_template(h=0.002, t=0.0)
+def test_s7_template_structure() -> None:
+    """Verifica que la familia S7 construya una Template válida con m=7 clusters."""
+    t = get_s7_template(h=0.002, t=0.0)
+    assert t.m == 7
+    assert len(t.x) == 7
+    assert len(t.phi) == 7
+    assert t.P is not None
+    assert len(t.P) == 7
+
 
 
 def test_s7_cited_constants_algebraic_consistency() -> None:
