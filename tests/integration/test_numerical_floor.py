@@ -102,7 +102,8 @@ def test_numerical_floor_degradation_s7() -> None:
                 f"{row['solve_time']:.4f} |\n"
             )
         f.write(
-            "\n\n**Conclusión**: Para $\\varepsilon \\ge 10^{-6}$, el requerimiento espectral es infactible. "
+            "\n\n**Conclusión**: Para $\\varepsilon \\ge 10^{-6}$, "
+            "el requerimiento espectral es infactible. "
             "Para $\\varepsilon < 10^{-7}$, el problema semidefinido entra "
             "en la zona de ruido numérico de las tolerancias $10^{-8}\\dots 10^{-10}$, "
             "provocando estados `OPTIMAL_INACCURATE` o fallos de verificación.\n"
