@@ -244,11 +244,16 @@ class GAEngine:
                 "eval_time": eval_time,
             }
 
+        floor_to_use = (
+            getattr(self.config, "lam_floor_hat", 1e-5)
+            if getattr(self.config, "evaluator", "plain") == "scaled"
+            else self.config.lam_floor
+        )
         f = compute_continuous_fitness(
             lam=lam_star,
             s=s_star,
             tol=self.config.tol,
-            lam_floor=self.config.lam_floor,
+            lam_floor=floor_to_use,
         )
         f_sel = compute_f_sel(s_star, lam_normalized, tol=self.config.tol)
 
