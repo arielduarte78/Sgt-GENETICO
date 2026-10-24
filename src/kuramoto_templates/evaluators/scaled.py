@@ -309,14 +309,6 @@ class ScaledSDPEvaluator:
         A_d = build_ad_matrix(x_arr)
 
         N = scipy.linalg.null_space(A_F)
-        # Refinamiento iterativo para garantizar ||A_F N||_inf <= 1e-14
-        res_inf = float(np.max(np.abs(A_F @ N)))
-        if res_inf > 1e-14:
-            corr, _, _, _ = np.linalg.lstsq(A_F, A_F @ N, rcond=None)
-            N = N - corr
-            N, _ = np.linalg.qr(N)
-            res_inf = float(np.max(np.abs(A_F @ N)))
-
         d = N.shape[1]
         if d == 0:
             s_default = max(0.0, float(self.config.mu_t - np.min(x_arr)))
@@ -335,8 +327,16 @@ class ScaledSDPEvaluator:
                 lam_normalized=0.0,
                 P=None,
                 status="NO_NULLSPACE_DEGREES_OF_FREEDOM",
-                solver_info={"h_eff": h_eff, "res_inf": res_inf},
+                solver_info={"h_eff": h_eff, "res_inf": 0.0},
             )
+
+        # Refinamiento iterativo para garantizar ||A_F N||_inf <= 1e-14
+        res_inf = float(np.max(np.abs(A_F @ N)))
+        if res_inf > 1e-14:
+            corr, _, _, _ = np.linalg.lstsq(A_F, A_F @ N, rcond=None)
+            N = N - corr
+            N, _ = np.linalg.qr(N)
+            res_inf = float(np.max(np.abs(A_F @ N)))
 
         z = cp.Variable(d)
         lam_var = cp.Variable()
@@ -469,12 +469,6 @@ class ScaledSDPEvaluator:
         A_d = build_ad_matrix(x_arr)
 
         N = scipy.linalg.null_space(A_F)
-        res_inf = float(np.max(np.abs(A_F @ N)))
-        if res_inf > 1e-14:
-            corr, _, _, _ = np.linalg.lstsq(A_F, A_F @ N, rcond=None)
-            N = N - corr
-            N, _ = np.linalg.qr(N)
-
         d = N.shape[1]
         if d == 0:
             return EvalResult(
@@ -485,6 +479,12 @@ class ScaledSDPEvaluator:
                 status="NO_NULLSPACE_DEGREES_OF_FREEDOM",
                 solver_info={"h_eff": h_eff},
             )
+
+        res_inf = float(np.max(np.abs(A_F @ N)))
+        if res_inf > 1e-14:
+            corr, _, _, _ = np.linalg.lstsq(A_F, A_F @ N, rcond=None)
+            N = N - corr
+            N, _ = np.linalg.qr(N)
 
         z = cp.Variable(d)
         t_var = cp.Variable()
