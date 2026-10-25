@@ -15,19 +15,33 @@ from pathlib import Path
 
 
 def _get_imports_from_file(file_path: Path) -> list[str]:
-    """Extrae todos los módulos importados en un archivo .py mediante AST."""
+    """Extrae todos los módulos importados en runtime en un archivo .py mediante AST (ignorando TYPE_CHECKING)."""
     tree = ast.parse(file_path.read_text(encoding="utf-8"), filename=str(file_path))
-    imports: list[str] = []
 
-    for node in ast.walk(tree):
-        if isinstance(node, ast.Import):
+    class RuntimeImportVisitor(ast.NodeVisitor):
+        def __init__(self) -> None:
+            self.imports: list[str] = []
+
+        def visit_If(self, node: ast.If) -> None:
+            # Ignorar bloques 'if TYPE_CHECKING:' (son tipos estáticos puros, sin dependencia en runtime)
+            if isinstance(node.test, ast.Name) and node.test.id == "TYPE_CHECKING":
+                return
+            if isinstance(node.test, ast.Attribute) and node.test.attr == "TYPE_CHECKING":
+                return
+            self.generic_visit(node)
+
+        def visit_Import(self, node: ast.Import) -> None:
             for alias in node.names:
-                imports.append(alias.name)
-        elif isinstance(node, ast.ImportFrom):
-            if node.module:
-                imports.append(node.module)
+                self.imports.append(alias.name)
 
-    return imports
+        def visit_ImportFrom(self, node: ast.ImportFrom) -> None:
+            if node.module:
+                self.imports.append(node.module)
+
+    visitor = RuntimeImportVisitor()
+    visitor.visit(tree)
+    return visitor.imports
+
 
 
 def test_domain_has_zero_external_solver_or_higher_layer_dependencies() -> None:

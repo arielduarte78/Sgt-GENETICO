@@ -16,6 +16,10 @@ NOTA DE ESQUELETO:
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from kuramoto_templates.search.genome import Genome
 
 from kuramoto_templates.evaluators.results import EvalResult
 
@@ -24,14 +28,22 @@ class Evaluator(ABC):
     """Clase base abstracta para evaluadores de plantillas (x, phi)."""
 
     @abstractmethod
-    def evaluate(self, x: tuple[float, ...], phi: tuple[float, ...]) -> EvalResult:
+    def evaluate(
+        self,
+        x: tuple[float, ...],
+        phi: tuple[float, ...],
+        genome: Genome | None = None,
+    ) -> EvalResult:
+
         """Evalúa un par (x, phi) resolviendo el problema de aptitud.
 
         Args:
             x: Tupla con tamaños de cluster x_a > 0, sum x_a = 1.
             phi: Tupla con fases de cluster phi_a en (-pi, pi].
+            genome: Genoma opcional del candidato (ignorado si no aplica).
 
         Returns:
             Instancia de EvalResult con fitness escalar f, conectividad mu y diagnósticos.
         """
         pass
+

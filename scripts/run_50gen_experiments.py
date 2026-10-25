@@ -8,9 +8,9 @@ Evalúa si el GA conserva/mejora S7 y reporta el mejor mu alcanzable con lam_hat
 from __future__ import annotations
 
 import json
-from pathlib import Path
 import sys
 import time
+from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
@@ -21,7 +21,7 @@ from kuramoto_templates.search.engine import GAEngine
 from kuramoto_templates.search.seeds import create_s7_direct_seed
 
 
-def run_experiment(mu_t: float, run_id: str):
+def run_experiment(mu_t: float, run_id: str) -> None:
     print("=" * 75)
     print(f"INICIANDO EXPERIMENTO 50 GENS: {run_id} (mu_t = {mu_t:.4f})")
     print("=" * 75)
@@ -49,14 +49,13 @@ def run_experiment(mu_t: float, run_id: str):
     ckpt_path = out_dir / "checkpoints" / "checkpoint_gen_50.json"
     log_path = out_dir / "evaluations.jsonl"
 
-    with open(status_path, "r") as f:
+    with open(status_path) as f:
         status_data = json.load(f)
 
-    with open(ckpt_path, "r") as f:
+    with open(ckpt_path) as f:
         ckpt_data = json.load(f)
 
     hof_global = ckpt_data.get("hall_of_fame_global", [])
-    hof_m = ckpt_data.get("hall_of_fame_per_m", {})
 
     # Contar evaluaciones
     total_evals = status_data.get("total_evaluations", 0)
@@ -70,8 +69,12 @@ def run_experiment(mu_t: float, run_id: str):
 
     # Baseline S7 inicial
     s7_seed = create_s7_direct_seed(h=0.002, t=0.0)
-    s7_phase1 = ev_scaled.evaluate_phase1(s7_seed.phenotype_x, s7_seed.phenotype_phi, genome=s7_seed.genome)
-    s7_phase2 = ev_scaled.evaluate_phase2(s7_seed.phenotype_x, s7_seed.phenotype_phi, eps=1e-5, genome=s7_seed.genome)
+    s7_phase1 = ev_scaled.evaluate_phase1(
+        s7_seed.phenotype_x, s7_seed.phenotype_phi, genome=s7_seed.genome
+    )
+    s7_phase2 = ev_scaled.evaluate_phase2(
+        s7_seed.phenotype_x, s7_seed.phenotype_phi, eps=1e-5, genome=s7_seed.genome
+    )
 
     winner_phase2_mu = None
     if winner:
@@ -94,7 +97,7 @@ def run_experiment(mu_t: float, run_id: str):
     # Contar falsos positivos en el log
     false_positives = 0
     if log_path.exists():
-        with open(log_path, "r") as f:
+        with open(log_path) as f:
             for line in f:
                 if "falso_positivo" in line:
                     false_positives += 1
@@ -156,26 +159,49 @@ def run_experiment(mu_t: float, run_id: str):
     print(f"HoF con lam_hat >= piso ({lam_floor_hat}): {hof_ge_floor} de {len(hof_global)}")
     print(f"S7 Baseline Phase II (mu*): {s7_phase2.mu:.8f}")
     if winner:
-        print(f"Ganador: ID {winner.get('id')}, m={winner.get('genome', {}).get('m')}, f={winner.get('f'):.8e}, s*={winner.get('s_star'):.6e}, lam_hat={winner.get('lam_normalized'):.6e}")
-        print(f"Ganador Phase II (mu* max con lam_hat >= 1e-5): {winner_phase2_mu:.8f}" if winner_phase2_mu else "Ganador Phase II: None")
+        w_m = winner.get("genome", {}).get("m")
+        w_f = winner.get("f")
+        w_s = winner.get("s_star")
+        w_lam = winner.get("lam_normalized")
+        print(
+            f"Ganador: ID {winner.get('id')}, m={w_m}, "
+            f"f={w_f:.8e}, s*={w_s:.6e}, lam_hat={w_lam:.6e}"
+        )
+        p2_str = f"{winner_phase2_mu:.8f}" if winner_phase2_mu else "None"
+        print(f"Ganador Phase II (mu* max con lam_hat >= 1e-5): {p2_str}")
         conserva_s7 = winner.get("f") >= s7_phase1.f
-        print(f"¿GA conserva/mejora S7?: {conserva_s7} (f_ganador={winner.get('f'):.8e} vs f_S7={s7_phase1.f:.8e})")
+        print(
+            f"¿GA conserva/mejora S7?: {conserva_s7} "
+            f"(f_ganador={w_f:.8e} vs f_S7={s7_phase1.f:.8e})"
+        )
     print("=" * 75 + "\n")
-    return report
 
 
-def main():
+def main() -> None:
     # 1. Corrida control a mu_t = 0.690
-    rep_0690 = run_experiment(mu_t=0.690, run_id="run_50gen_mu_0690_control")
+    run_experiment(mu_t=0.690, run_id="run_50gen_mu_0690_control")
 
     # 2. Corrida frontera a mu_t = 0.6910
-    rep_06910 = run_experiment(mu_t=0.6910, run_id="run_50gen_mu_06910_frontier")
+    run_experiment(mu_t=0.6910, run_id="run_50gen_mu_06910_frontier")
 
-    print("\n" + "=" * 75)
-    print("RESULTADOS FINALES COMPARATIVOS (ITEM 4)")
-    print("=" * 75)
-    print(f"mu_t = 0.6900: Ganador m={rep_0690['winner']['m']}, f={rep_0690['winner']['f']:.8e}, mu*={rep_0690['winner']['mu_phase2']:.8f}")
-    print(f"mu_t = 0.6910: Ganador m={rep_06910['winner']['m']}, f={rep_06910['winner']['f']:.8e}, mu*={rep_06910['winner']['mu_phase2']:.8f}")
+    # Cargar y mostrar comparativa final
+    p0 = Path("results/run_50gen_mu_0690_control_summary.json")
+    p1 = Path("results/run_50gen_mu_06910_frontier_summary.json")
+    if p0.exists() and p1.exists():
+        with open(p0) as f0:
+            rep_0690 = json.load(f0)
+        with open(p1) as f1:
+            rep_06910 = json.load(f1)
+
+        print("\n" + "=" * 75)
+        print("RESULTADOS FINALES COMPARATIVOS (ITEM 4)")
+        print("=" * 75)
+        w0 = rep_0690.get("winner") or {}
+        w1 = rep_06910.get("winner") or {}
+        print(f"mu_t = 0.6900: Ganador m={w0.get('m')}, f={w0.get('f')}, mu*={w0.get('mu_phase2')}")
+        print(f"mu_t = 0.6910: Ganador m={w1.get('m')}, f={w1.get('f')}, mu*={w1.get('mu_phase2')}")
+
+
 
 
 if __name__ == "__main__":

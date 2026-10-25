@@ -45,7 +45,7 @@ from kuramoto_templates.search.selection import (
     tournament_selection,
 )
 
-EvaluatorFunc = Callable[[tuple[float, ...], tuple[float, ...]], EvalResult]
+EvaluatorFunc = Callable[..., EvalResult]
 
 
 def _individual_to_dict(ind: Individual) -> dict[str, Any]:
@@ -190,7 +190,7 @@ class GAEngine:
         idx = gen * self.config.num_islands + island_idx
         if idx < len(self.spawned_seeds):
             return self.spawned_seeds[idx]
-        return int(self.config.seed + idx * 7919)
+        return self.config.seed + idx * 7919
 
     def _evaluate(
         self,
@@ -437,7 +437,7 @@ class GAEngine:
                     M_mp[r, c] = mpmath.mp.mpf(str(M[r, c]))
             eigs_mp = mpmath.mp.eigsy(M_mp, eigvals_only=True)
             min_eig_mp = float(min(eigs_mp))
-            mpmath_ok = bool(min_eig_mp >= self.config.lam_floor)
+            mpmath_ok = min_eig_mp >= self.config.lam_floor
 
             # d) SCS tol=1e-8 con max_iters=20000
             scs_eval = SDPEvaluator(
@@ -451,13 +451,13 @@ class GAEngine:
             res_scs = scs_eval.evaluate_phase1(ind.phenotype_x, ind.phenotype_phi)
             lam_scs = float(res_scs.lam) if res_scs.lam is not None else float("-inf")
             if res_scs.status == "OPTIMAL":
-                scs_ok = bool(lam_scs >= self.config.lam_floor)
+                scs_ok = lam_scs >= self.config.lam_floor
             elif res_scs.status == "OPTIMAL_INACCURATE":
                 scs_ok = True  # Verdict depends on Clarabel 1e-9 + NumPy + mpmath 50d
             else:
                 scs_ok = False
 
-            is_valid = bool(numpy_ok and mpmath_ok and scs_ok)
+            is_valid = numpy_ok and mpmath_ok and scs_ok
             return is_valid, lam_scs, lam_min_M
 
     def _update_hall_of_fame(self, ind: Individual, island: int = 0) -> None:
@@ -539,15 +539,14 @@ class GAEngine:
                     mu_star=mu_star_val,
                 )
 
-        # Global Hall of Fame: ordenado estrictamente por compare_individuals (mu* primero si existe)
+        # Global Hall of Fame: ordenado por compare_individuals (mu* primero si existe)
         import functools
 
+        def _cmp_inds(a: Individual, b: Individual) -> int:
+            return compare_individuals(b, a, self.config.fitness_noise)
+
         self.hall_of_fame_global.append(ind)
-        self.hall_of_fame_global.sort(
-            key=functools.cmp_to_key(
-                lambda a, b: compare_individuals(b, a, self.config.fitness_noise)
-            )
-        )
+        self.hall_of_fame_global.sort(key=functools.cmp_to_key(_cmp_inds))
         if len(self.hall_of_fame_global) > 20:
             self.hall_of_fame_global.pop()
 
@@ -571,7 +570,7 @@ class GAEngine:
             # Inject seeds if enabled
             if not self.no_seeds:
                 if getattr(self.config, "evaluator", "plain") == "scaled":
-                    # En modo escalado, inyectar diversidad en el régimen escalable y no inyectar C4 degenerado
+                    # En modo escalado, inyectar diversidad escalable y no inyectar C4
                     scaled_seeds_params = [
                         (0.002, 0.0, "seed_s7_h0.002_t0"),
                         (0.001, 0.0, "seed_s7_h0.001_t0"),

@@ -21,7 +21,7 @@ def compute_continuous_fitness(
     - a mu_t dado:
       * si lam >= lam_floor y s <= tol: f = +lam (factible estable, > 0)
       * si lam >= lam_floor y s > tol:  f = -s (estable, falta conectividad, <= 0)
-      * si lam < lam_floor: f = -1.0 + lam_clipped (clip a >= -1), SIEMPRE peor que cualquier estable.
+      * si lam < lam_floor: f = -1.0 + lam_clipped (clip >= -1), peor que cualquier estable.
 
     Args:
         lam: Margen espectral alcanzado lambda* o lambda_hat (autovalor mínimo de M(p) o G_hat(z)).

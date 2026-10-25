@@ -72,7 +72,7 @@ def compare_individuals(
                 - Mayor lam_normalized (margen espectral) gana.
                 - Menor m gana (parsimonia).
                 - Menor id gana (determinismo).
-        - Si solo uno tiene mu_star, gana el que tiene mu_star (alcanzó factibilidad estable Fase II).
+        - Si solo uno tiene mu_star, gana el que tiene mu_star (factible estable Fase II).
         - Si ninguno tiene mu_star, comparar por f_sel (Fase I):
             - Si |f_sel_1 - f_sel_2| < fitness_noise:
                 - Menor m gana (parsimonia).

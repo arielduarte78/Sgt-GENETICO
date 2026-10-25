@@ -12,7 +12,10 @@ from __future__ import annotations
 
 import math
 import time
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from kuramoto_templates.search.genome import Genome
 
 import clarabel  # type: ignore[import-untyped]
 import cvxpy as cp
@@ -51,13 +54,17 @@ class SDPEvaluator(Evaluator):
         self.config = config if config is not None else EvalConfig()
 
     def evaluate_phase1(
-        self, x: tuple[float, ...], phi: tuple[float, ...]
+        self,
+        x: tuple[float, ...],
+        phi: tuple[float, ...],
+        genome: Genome | None = None,
     ) -> EvalResult:
         """Ejecuta exclusivamente la Fase I elástica sobre un candidato (x, phi).
 
         Args:
             x: Tamaños de cluster x_a > 0, sum x_a = 1.
             phi: Fases de cluster phi_a en (-pi, pi].
+            genome: Genoma opcional del candidato (ignorado en evaluador plano).
 
         Returns:
             EvalResult con la métrica Phi en [0, 1] y diagnósticos del solver.
@@ -69,6 +76,7 @@ class SDPEvaluator(Evaluator):
         x: tuple[float, ...],
         phi: tuple[float, ...],
         eps: float | None = None,
+        genome: Genome | None = None,
     ) -> EvalResult:
         """Resuelve directamente la Fase II (maximización de mu*) sobre el espacio nulo de A_F.
 
@@ -76,6 +84,7 @@ class SDPEvaluator(Evaluator):
             x: Tamaños de cluster x_a > 0, sum x_a = 1.
             phi: Fases de cluster phi_a en (-pi, pi].
             eps: Margen espectral a exigir (si es None se usa self.config.eps; permite eps=0.0).
+            genome: Genoma opcional del candidato (ignorado en evaluador plano).
 
         Returns:
             EvalResult con mu*, matriz P y diagnósticos de verify_solution.
@@ -85,12 +94,19 @@ class SDPEvaluator(Evaluator):
             x, phi, eps=eps_target, phi_phase1=0.0, base_solver_info={}
         )
 
-    def evaluate(self, x: tuple[float, ...], phi: tuple[float, ...]) -> EvalResult:
+    def evaluate(
+        self,
+        x: tuple[float, ...],
+        phi: tuple[float, ...],
+        genome: Genome | None = None,
+    ) -> EvalResult:
+
         """Evalúa un candidato (x, phi) resolviendo Fase I y, si s* <= tol, Fase II.
 
         Args:
             x: Tamaños de cluster x_a > 0, sum x_a = 1.
             phi: Fases de cluster phi_a en (-pi, pi].
+            genome: Genoma opcional del candidato (ignorado en evaluador plano).
 
         Returns:
             EvalResult con fitness continua f, conectividad mu* y diagnósticos completos.

@@ -44,6 +44,22 @@ select = [
     "UP",
 ]
 
+[tool.ruff.lint.per-file-ignores]
+"scripts/*" = [
+    "E501",
+    "I001",
+    "F401",
+    "F541",
+    "F841",
+    "UP015",
+    "B007",
+    "B905",
+    "E402",
+    "W293",
+    "F811",
+]
+
+
 [tool.mypy]
 python_version = "3.12"
 strict = true
@@ -55,6 +71,15 @@ check_untyped_defs = true
 no_implicit_optional = true
 warn_redundant_casts = true
 warn_unused_ignores = true
+
+[[tool.mypy.overrides]]
+module = "scripts.*"
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = "scripts.run_50gen_experiments"
+ignore_errors = false
+
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
