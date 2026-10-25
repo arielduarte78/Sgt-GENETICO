@@ -1,0 +1,317 @@
+[
+  {
+    "run_id": "with_seeds_mu_0.6915_seed_42",
+    "mu_t": 0.6915,
+    "seed": 42,
+    "champion_id": 1115,
+    "m": 7,
+    "h_eff": 0.0010166378403651747,
+    "d_s7_gauge_aligned": 0.002876103268676828,
+    "verify_solution": {
+      "is_valid": true,
+      "max_F": 5.144870139686979e-16,
+      "min_c": 0.21619593090762507
+    },
+    "mpmath_50d": {
+      "lam_min_G_hat": 9.976122439605252e-06,
+      "lam_min_M": 4.928886416009361e-11
+    },
+    "phase2_curve": {
+      "1e-05": {
+        "floor": 1e-05,
+        "clarabel_mu": 0.6922903853180075,
+        "clarabel_status": "OPTIMAL",
+        "clarabel_lam_hat": 1e-05,
+        "scs_mu": 0.6923515814436378,
+        "scs_status": "OPTIMAL_INACCURATE",
+        "diff_mu": 6.119612563038057e-05
+      },
+      "0.0001": {
+        "floor": 0.0001,
+        "clarabel_mu": 0.6917822018861937,
+        "clarabel_status": "OPTIMAL",
+        "clarabel_lam_hat": 0.0001,
+        "scs_mu": 0.6918990437208556,
+        "scs_status": "OPTIMAL_INACCURATE",
+        "diff_mu": 0.00011684183466198483
+      },
+      "0.001": {
+        "floor": 0.001,
+        "clarabel_mu": 0.686700543199256,
+        "clarabel_status": "OPTIMAL",
+        "clarabel_lam_hat": 0.001,
+        "scs_mu": 0.692725197498143,
+        "scs_status": "OPTIMAL_INACCURATE",
+        "diff_mu": 0.006024654298886989
+      }
+    },
+    "is_alarm": true,
+    "alarm_messages": [
+      "Piso 1e-05: Clarabel mu*=0.69229039 vs SCS mu*=0.69235158 (diff=6.12e-05 > 1e-5, status_scs=OPTIMAL_INACCURATE)",
+      "Piso 1e-04: Clarabel mu*=0.69178220 vs SCS mu*=0.69189904 (diff=1.17e-04 > 1e-5, status_scs=OPTIMAL_INACCURATE)",
+      "Piso 1e-03: Clarabel mu*=0.68670054 vs SCS mu*=0.69272520 (diff=6.02e-03 > 1e-5, status_scs=OPTIMAL_INACCURATE)"
+    ]
+  },
+  {
+    "run_id": "with_seeds_mu_0.6915_seed_123",
+    "mu_t": 0.6915,
+    "seed": 123,
+    "champion_id": 1547,
+    "m": 7,
+    "h_eff": 0.0010169021769865557,
+    "d_s7_gauge_aligned": 0.0028435767136802226,
+    "verify_solution": {
+      "is_valid": true,
+      "max_F": 1.0863705768304754e-16,
+      "min_c": 0.21573402171353462
+    },
+    "mpmath_50d": {
+      "lam_min_G_hat": 9.99749984996015e-06,
+      "lam_min_M": 3.49643211746355e-11
+    },
+    "phase2_curve": {
+      "1e-05": {
+        "floor": 1e-05,
+        "clarabel_mu": 0.6919549630802133,
+        "clarabel_status": "OPTIMAL",
+        "clarabel_lam_hat": 1e-05,
+        "scs_mu": 0.6919554796805794,
+        "scs_status": "OPTIMAL_INACCURATE",
+        "diff_mu": 5.166003660406204e-07
+      },
+      "0.0001": {
+        "floor": 0.0001,
+        "clarabel_mu": 0.6919162407869247,
+        "clarabel_status": "OPTIMAL",
+        "clarabel_lam_hat": 0.0001,
+        "scs_mu": 0.6919207818756025,
+        "scs_status": "OPTIMAL_INACCURATE",
+        "diff_mu": 4.5410886777563775e-06
+      },
+      "0.001": {
+        "floor": 0.001,
+        "clarabel_mu": 0.6863070178474306,
+        "clarabel_status": "OPTIMAL",
+        "clarabel_lam_hat": 0.001,
+        "scs_mu": 0.6873821389132101,
+        "scs_status": "OPTIMAL_INACCURATE",
+        "diff_mu": 0.0010751210657794497
+      }
+    },
+    "is_alarm": true,
+    "alarm_messages": [
+      "Piso 1e-03: Clarabel mu*=0.68630702 vs SCS mu*=0.68738214 (diff=1.08e-03 > 1e-5, status_scs=OPTIMAL_INACCURATE)"
+    ]
+  },
+  {
+    "run_id": "with_seeds_mu_0.6915_seed_999",
+    "mu_t": 0.6915,
+    "seed": 999,
+    "champion_id": 562,
+    "m": 7,
+    "h_eff": 0.0010168012133934237,
+    "d_s7_gauge_aligned": 0.002842349841318222,
+    "verify_solution": {
+      "is_valid": true,
+      "max_F": 2.4887860869404754e-16,
+      "min_c": 0.215954125054986
+    },
+    "mpmath_50d": {
+      "lam_min_G_hat": 9.995865212474233e-06,
+      "lam_min_M": 2.4861084691929533e-11
+    },
+    "phase2_curve": {
+      "1e-05": {
+        "floor": 1e-05,
+        "clarabel_mu": 0.6923918141681124,
+        "clarabel_status": "OPTIMAL",
+        "clarabel_lam_hat": 1e-05,
+        "scs_mu": 0.6924571990603544,
+        "scs_status": "OPTIMAL_INACCURATE",
+        "diff_mu": 6.538489224205968e-05
+      },
+      "0.0001": {
+        "floor": 0.0001,
+        "clarabel_mu": 0.6918902614054379,
+        "clarabel_status": "OPTIMAL",
+        "clarabel_lam_hat": 0.0001,
+        "scs_mu": 0.6920611231923699,
+        "scs_status": "OPTIMAL_INACCURATE",
+        "diff_mu": 0.00017086178693204168
+      },
+      "0.001": {
+        "floor": 0.001,
+        "clarabel_mu": 0.6868482754956571,
+        "clarabel_status": "OPTIMAL",
+        "clarabel_lam_hat": 0.001,
+        "scs_mu": 0.6924682451776341,
+        "scs_status": "OPTIMAL_INACCURATE",
+        "diff_mu": 0.005619969681976977
+      }
+    },
+    "is_alarm": true,
+    "alarm_messages": [
+      "Piso 1e-05: Clarabel mu*=0.69239181 vs SCS mu*=0.69245720 (diff=6.54e-05 > 1e-5, status_scs=OPTIMAL_INACCURATE)",
+      "Piso 1e-04: Clarabel mu*=0.69189026 vs SCS mu*=0.69206112 (diff=1.71e-04 > 1e-5, status_scs=OPTIMAL_INACCURATE)",
+      "Piso 1e-03: Clarabel mu*=0.68684828 vs SCS mu*=0.69246825 (diff=5.62e-03 > 1e-5, status_scs=OPTIMAL_INACCURATE)"
+    ]
+  },
+  {
+    "run_id": "with_seeds_mu_0.6920_seed_42",
+    "mu_t": 0.692,
+    "seed": 42,
+    "champion_id": 3178,
+    "m": 7,
+    "h_eff": 0.0010169079172946437,
+    "d_s7_gauge_aligned": 0.0028526734359101053,
+    "verify_solution": {
+      "is_valid": true,
+      "max_F": 1.336821278674627e-16,
+      "min_c": 0.21578198667446524
+    },
+    "mpmath_50d": {
+      "lam_min_G_hat": 1.0000002352214275e-05,
+      "lam_min_M": 2.4859552943323425e-11
+    },
+    "phase2_curve": {
+      "1e-05": {
+        "floor": 1e-05,
+        "clarabel_mu": 0.6925687926316652,
+        "clarabel_status": "OPTIMAL",
+        "clarabel_lam_hat": 1e-05,
+        "scs_mu": 0.6925687996190807,
+        "scs_status": "OPTIMAL_INACCURATE",
+        "diff_mu": 6.987415535064656e-09
+      },
+      "0.0001": {
+        "floor": 0.0001,
+        "clarabel_mu": 0.6921169222505472,
+        "clarabel_status": "OPTIMAL",
+        "clarabel_lam_hat": 0.0001,
+        "scs_mu": 0.6925684514746301,
+        "scs_status": "OPTIMAL_INACCURATE",
+        "diff_mu": 0.00045152922408286944
+      },
+      "0.001": {
+        "floor": 0.001,
+        "clarabel_mu": 0.687036825993746,
+        "clarabel_status": "OPTIMAL",
+        "clarabel_lam_hat": 0.001,
+        "scs_mu": 0.692568275439197,
+        "scs_status": "OPTIMAL_INACCURATE",
+        "diff_mu": 0.00553144944545092
+      }
+    },
+    "is_alarm": true,
+    "alarm_messages": [
+      "Piso 1e-04: Clarabel mu*=0.69211692 vs SCS mu*=0.69256845 (diff=4.52e-04 > 1e-5, status_scs=OPTIMAL_INACCURATE)",
+      "Piso 1e-03: Clarabel mu*=0.68703683 vs SCS mu*=0.69256828 (diff=5.53e-03 > 1e-5, status_scs=OPTIMAL_INACCURATE)"
+    ]
+  },
+  {
+    "run_id": "with_seeds_mu_0.6920_seed_123",
+    "mu_t": 0.692,
+    "seed": 123,
+    "champion_id": 3232,
+    "m": 7,
+    "h_eff": 0.001016793342732962,
+    "d_s7_gauge_aligned": 0.002853265646965046,
+    "verify_solution": {
+      "is_valid": true,
+      "max_F": 7.434133181274263e-16,
+      "min_c": 0.21583755740333255
+    },
+    "mpmath_50d": {
+      "lam_min_G_hat": 9.963870001306466e-06,
+      "lam_min_M": 2.4954876195952427e-11
+    },
+    "phase2_curve": {
+      "1e-05": {
+        "floor": 1e-05,
+        "clarabel_mu": 0.6924339206585354,
+        "clarabel_status": "OPTIMAL",
+        "clarabel_lam_hat": 1e-05,
+        "scs_mu": 0.6925451707848136,
+        "scs_status": "OPTIMAL_INACCURATE",
+        "diff_mu": 0.00011125012627821729
+      },
+      "0.0001": {
+        "floor": 0.0001,
+        "clarabel_mu": 0.6919414577926977,
+        "clarabel_status": "OPTIMAL",
+        "clarabel_lam_hat": 0.0001,
+        "scs_mu": 0.6927788127390341,
+        "scs_status": "OPTIMAL_INACCURATE",
+        "diff_mu": 0.0008373549463364105
+      },
+      "0.001": {
+        "floor": 0.001,
+        "clarabel_mu": 0.6869057161857428,
+        "clarabel_status": "OPTIMAL",
+        "clarabel_lam_hat": 0.001,
+        "scs_mu": 0.6925757245316362,
+        "scs_status": "OPTIMAL_INACCURATE",
+        "diff_mu": 0.005670008345893374
+      }
+    },
+    "is_alarm": true,
+    "alarm_messages": [
+      "Piso 1e-05: Clarabel mu*=0.69243392 vs SCS mu*=0.69254517 (diff=1.11e-04 > 1e-5, status_scs=OPTIMAL_INACCURATE)",
+      "Piso 1e-04: Clarabel mu*=0.69194146 vs SCS mu*=0.69277881 (diff=8.37e-04 > 1e-5, status_scs=OPTIMAL_INACCURATE)",
+      "Piso 1e-03: Clarabel mu*=0.68690572 vs SCS mu*=0.69257572 (diff=5.67e-03 > 1e-5, status_scs=OPTIMAL_INACCURATE)"
+    ]
+  },
+  {
+    "run_id": "with_seeds_mu_0.6920_seed_999",
+    "mu_t": 0.692,
+    "seed": 999,
+    "champion_id": 562,
+    "m": 7,
+    "h_eff": 0.0010168012133934237,
+    "d_s7_gauge_aligned": 0.002842349841318222,
+    "verify_solution": {
+      "is_valid": true,
+      "max_F": 2.4887860869404754e-16,
+      "min_c": 0.215954125054986
+    },
+    "mpmath_50d": {
+      "lam_min_G_hat": 9.995865212474233e-06,
+      "lam_min_M": 2.4861084691929533e-11
+    },
+    "phase2_curve": {
+      "1e-05": {
+        "floor": 1e-05,
+        "clarabel_mu": 0.6923918141681124,
+        "clarabel_status": "OPTIMAL",
+        "clarabel_lam_hat": 1e-05,
+        "scs_mu": 0.6924571990603544,
+        "scs_status": "OPTIMAL_INACCURATE",
+        "diff_mu": 6.538489224205968e-05
+      },
+      "0.0001": {
+        "floor": 0.0001,
+        "clarabel_mu": 0.6918902614054379,
+        "clarabel_status": "OPTIMAL",
+        "clarabel_lam_hat": 0.0001,
+        "scs_mu": 0.6920611231923699,
+        "scs_status": "OPTIMAL_INACCURATE",
+        "diff_mu": 0.00017086178693204168
+      },
+      "0.001": {
+        "floor": 0.001,
+        "clarabel_mu": 0.6868482754956571,
+        "clarabel_status": "OPTIMAL",
+        "clarabel_lam_hat": 0.001,
+        "scs_mu": 0.6924682451776341,
+        "scs_status": "OPTIMAL_INACCURATE",
+        "diff_mu": 0.005619969681976977
+      }
+    },
+    "is_alarm": true,
+    "alarm_messages": [
+      "Piso 1e-05: Clarabel mu*=0.69239181 vs SCS mu*=0.69245720 (diff=6.54e-05 > 1e-5, status_scs=OPTIMAL_INACCURATE)",
+      "Piso 1e-04: Clarabel mu*=0.69189026 vs SCS mu*=0.69206112 (diff=1.71e-04 > 1e-5, status_scs=OPTIMAL_INACCURATE)",
+      "Piso 1e-03: Clarabel mu*=0.68684828 vs SCS mu*=0.69246825 (diff=5.62e-03 > 1e-5, status_scs=OPTIMAL_INACCURATE)"
+    ]
+  }
+]
