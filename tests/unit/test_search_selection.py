@@ -18,6 +18,7 @@ def _make_ind(
     lam_star: float,
     lam_norm: float,
     tol: float = 1e-8,
+    mu_star: float | None = None,
 ) -> Individual:
     genome = Genome(
         m=m,
@@ -40,7 +41,21 @@ def _make_ind(
         f_sel=f_sel,
         parent_ids=(),
         operator_name="init",
+        mu_star=mu_star,
     )
+
+
+def test_compare_individuals_prefers_higher_mu_star_even_with_lower_lam_hat() -> None:
+    """Criterio de comparación: Un candidato mejora solo si mu* sube."""
+    # ind1 tiene mu* = 0.6915 pero lam_norm = 0.0001
+    ind1 = _make_ind(ind_id=1, m=7, s_star=0.0, lam_star=0.0001, lam_norm=0.0001, mu_star=0.6915)
+    # ind2 tiene mu* = 0.6905 pero lam_norm = 0.0005 (mayor margen en Fase I)
+    ind2 = _make_ind(ind_id=2, m=7, s_star=0.0, lam_star=0.0005, lam_norm=0.0005, mu_star=0.6905)
+
+    # Debe ganar ind1 porque su mu* es mayor (0.6915 > 0.6905)
+    assert compare_individuals(ind1, ind2) > 0
+    assert compare_individuals(ind2, ind1) < 0
+
 
 
 def test_compute_f_sel() -> None:

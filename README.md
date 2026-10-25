@@ -79,6 +79,34 @@ Márgenes espectrales $\varepsilon < \sim 10^{-7}$ no son resolubles con toleran
 - La curva completa de degradación está documentada y guardada como artefacto en `results/numerical_floor_s7.json` y `results/numerical_floor_s7.md`.
 - **Regla de interpretación física:** En la Fase I ($\max \lambda - \rho s$), $s^* \approx 0$ **NO implica estabilidad**; solo $\lambda^* \ge \text{piso}$ la implica. El slack $s^* \approx 0$ puede coexistir con $\lambda^* < 0$ cuando el solver compensa grado a costa de estabilidad espectral.
 
+### 4.1 Heurísticas de Optimización: Barrera de Régimen y Piso Numérico
+
+En el evaluador escalado (`ScaledSDPEvaluator`), el paisaje de búsqueda incorpora dos constantes heurísticas fundamentales para guiar la optimización genética:
+
+#### 1. Barrera de Régimen ($-10.0$) para Estados `NOT_SCALABLE` [HEURÍSTICA]:
+- **Justificación técnica:**
+  - En la formulación asintótica escalada, la aptitud se define sobre el margen normalizado $\hat{\lambda} = \lambda / h_{\text{eff}}^2$.
+  - Los candidatos degenerados o colapsados ($h_{\text{eff}} < 10^{-4}$, $m < 5$ o particiones sin hojas resolubles) no pueden evaluarse en el cono acoplado $6 \times 6$ y deben ser procesados por el evaluador plano.
+  - En el evaluador plano, la cota espectral residual $\lambda_{\text{plain}} \sim -10^{-10}$ produce una penalización aparente $f_{\text{plain}} \approx -10^{-5}$. En contraste, un candidato escalable prometedor en la frontera crítica ($\mu_t > 0.691$, $h_{\text{eff}} \sim 2 \cdot 10^{-3}$) con $\hat{\lambda} \sim -10^{-3}$ recibe $f \sim -10^{-3}$.
+  - Sin una barrera divisoria, $-10^{-5} > -10^{-3}$, lo que desata un fenómeno severo de *Reward Hacking*: la selección por torneo extingue a la población escalable en favor de configuraciones triviales no escalables como $C_4$ ($m=4, h=0$).
+  - La barrera penaliza todo estado no escalable con $f = -10.0 + \dots$, asegurando una separación topológica estricta: cualquier individuo escalable ($f \in [-1, +\infty)$) domina a cualquier candidato colapsado ($f \le -10.0$).
+- **Limitaciones:**
+  - **Discontinuidad artificial:** Introduce un escalón pronunciado en el paisaje de aptitud que no refleja una propiedad física continua del modelo de Kuramoto.
+  - **Pérdida de gradiente:** Por debajo de $-10.0$, el algoritmo genético pierde sensibilidad direccional para guiar la reconstitución de agrupamientos válidos, dependiendo puramente de operadores de mutación y cruce estocásticos.
+  - **Arbitrariedad de escala:** El valor $-10.0$ es una convención arbitraria; cualquier valor inferior a $-2.0$ satisface el requerimiento de separación.
+
+#### 2. Piso Espectral $\hat{\lambda}_{\text{floor\_hat}} = 10^{-5}$ [HEURÍSTICA]:
+- **Justificación técnica:**
+  - Distingue la estabilidad asintótica física genuina de las fluctuaciones numéricas de punto interior de los solvers primarios y secundarios.
+  - En la calibración empírica sobre 200 individuos independientes contrastando `Clarabel(1e-8)`, `Clarabel(1e-9)` y `SCS(1e-8)`:
+    1. El desacuerdo interno de punto interior de Clarabel no supera $7.73 \times 10^{-8}$.
+    2. El desacuerdo máximo con SCS cuando ambos alcanzan `OPTIMAL` es de $5.04 \times 10^{-6}$.
+    3. Las divergencias mayores a $10^{-4}$ se deben exclusivamente a fallos de convergencia de SCS (`OPTIMAL_INACCURATE`).
+  - Fijar $\hat{\lambda}_{\text{floor\_hat}} = 10^{-5}$ provee un margen de seguridad de $>100\times$ respecto al ruido interno de Clarabel y $>2\times$ respecto a SCS convergido, garantizando además que plantillas físicas como $S_7$ ($\hat{\lambda} \approx 3.2 \times 10^{-4}$ para $h=0.002$) sean aceptadas inequívocamente.
+- **Limitaciones:**
+  - **Falsos negativos marginales:** Descarta candidatos teóricamente estables cuya curvatura espectral normalizada se encuentre en el intervalo marginal $(0, 10^{-5})$, si bien tales configuraciones carecen de robustez física frente a perturbaciones.
+  - **Dependencia de la aritmética:** El umbral $10^{-5}$ está calibrado para aritmética IEEE 754 float64; en aritmética de precisión arbitraria o variable (p. ej. `mpmath`), un piso analítico inferior podría ser resoluble.
+  - **Condicionamiento en $h$ pequeño:** Para $h_{\text{eff}} \ll 10^{-3}$, el margen absoluto en la matriz original es $\lambda_{\min}(M) \sim \hat{\lambda} \cdot h_{\text{eff}}^2 \approx 10^{-11}$, aproximándose al umbral de sensibilidad de las descomposiciones espectrales en doble precisión.
 
 ---
 

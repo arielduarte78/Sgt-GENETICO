@@ -539,15 +539,18 @@ class GAEngine:
                     mu_star=mu_star_val,
                 )
 
-        # Global Hall of Fame
-        if not self.hall_of_fame_global:
-            self.hall_of_fame_global.append(ind)
-        else:
-            best = self.hall_of_fame_global[0]
-            if compare_individuals(ind, best, self.config.fitness_noise) > 0:
-                self.hall_of_fame_global.insert(0, ind)
-                if len(self.hall_of_fame_global) > 20:
-                    self.hall_of_fame_global.pop()
+        # Global Hall of Fame: ordenado estrictamente por compare_individuals (mu* primero si existe)
+        import functools
+
+        self.hall_of_fame_global.append(ind)
+        self.hall_of_fame_global.sort(
+            key=functools.cmp_to_key(
+                lambda a, b: compare_individuals(b, a, self.config.fitness_noise)
+            )
+        )
+        if len(self.hall_of_fame_global) > 20:
+            self.hall_of_fame_global.pop()
+
 
         # Per-m Hall of Fame
         m = ind.genome.m

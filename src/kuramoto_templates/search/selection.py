@@ -66,11 +66,37 @@ def compare_individuals(
         0 if they are identical.
 
     Rules:
-        - If |f_sel_1 - f_sel_2| < fitness_noise:
-            - Smaller number of clusters m wins (parsimony).
-            - If m is equal, smaller unique id wins (strict determinism).
-        - Otherwise, higher f_sel wins.
+        - Si ambos tienen mu_star (Fase II), un candidato "mejora" solo si mu* sube:
+            - Mayor mu_star gana.
+            - Si |mu_star_1 - mu_star_2| < fitness_noise:
+                - Mayor lam_normalized (margen espectral) gana.
+                - Menor m gana (parsimonia).
+                - Menor id gana (determinismo).
+        - Si solo uno tiene mu_star, gana el que tiene mu_star (alcanzó factibilidad estable Fase II).
+        - Si ninguno tiene mu_star, comparar por f_sel (Fase I):
+            - Si |f_sel_1 - f_sel_2| < fitness_noise:
+                - Menor m gana (parsimonia).
+                - Menor id gana (determinismo).
+            - En caso contrario, mayor f_sel gana.
     """
+    if ind1.mu_star is not None and ind2.mu_star is not None:
+        diff_mu = ind1.mu_star - ind2.mu_star
+        if abs(diff_mu) < fitness_noise:
+            diff_lam = ind1.lam_normalized - ind2.lam_normalized
+            if abs(diff_lam) >= fitness_noise:
+                return 1 if diff_lam > 0.0 else -1
+            if ind1.genome.m != ind2.genome.m:
+                return 1 if ind1.genome.m < ind2.genome.m else -1
+            if ind1.id != ind2.id:
+                return 1 if ind1.id < ind2.id else -1
+            return 0
+        return 1 if diff_mu > 0.0 else -1
+
+    if ind1.mu_star is not None and ind2.mu_star is None:
+        return 1
+    if ind1.mu_star is None and ind2.mu_star is not None:
+        return -1
+
     diff = ind1.f_sel - ind2.f_sel
     if abs(diff) < fitness_noise:
         # Tie-break 1: smaller m wins
@@ -82,6 +108,7 @@ def compare_individuals(
         return 0
 
     return 1 if diff > 0.0 else -1
+
 
 
 def tournament_selection(

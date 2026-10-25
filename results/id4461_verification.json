@@ -1,0 +1,17 @@
+{
+  "id": 4461,
+  "m": 7,
+  "h_eff": 0.001017337953325816,
+  "clarabel_1e8_lam_hat": 0.00042106831968234665,
+  "clarabel_1e9_lam_hat": 0.0004210679246745136,
+  "scs_1e8_lam_hat": 0.0005651276401429829,
+  "numpy_lam_min_G_hat": 0.0004210678760724805,
+  "numpy_lam_min_M": 1.267262323813856e-09,
+  "mpmath_50d_lam_min_G_hat": 0.00042106787607250297,
+  "mpmath_50d_lam_min_M": 1.2672623239877484e-09,
+  "phase2_mu_clarabel": 0.6913206319338532,
+  "phase2_mu_scs": 0.691304685897661,
+  "equilibrium_max_F": 2.239961688355052e-16,
+  "min_c": 0.21508762375784213,
+  "is_strictly_stable": true
+}
