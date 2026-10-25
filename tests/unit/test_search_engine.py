@@ -211,3 +211,33 @@ def test_hall_of_fame_reverification_rejects_false_positive() -> None:
                     assert rec["lam_min_M"] < cfg.lam_floor
         assert found_fp, "No se encontró registro de falso_positivo en run.jsonl"
 
+
+def test_checkpoint_pruning_bounds_disk_usage(tmp_path: Path) -> None:
+    """Verify that checkpoint pruning retains only the most recent N checkpoints."""
+    cfg = GAConfig(
+        mu_t=0.690,
+        num_islands=2,
+        island_pop_size=4,
+        num_generations=6,
+        use_seeds=False,
+        seed=42,
+        checkpoint_interval=2,
+        checkpoint_keep_count=2,
+    )
+    engine = GAEngine(
+        config=cfg,
+        output_dir=tmp_path,
+        evaluator_fn=mock_analytical_evaluator,
+        allow_dirty=True,
+    )
+    engine.run()
+
+    ckpt_dir = tmp_path / "checkpoints"
+    ckpts = sorted(ckpt_dir.glob("checkpoint_gen_*.json"))
+    # Only 2 checkpoints should remain: gen 4 and gen 6
+    assert len(ckpts) == 2
+    assert ckpts[0].name == "checkpoint_gen_4.json"
+    assert ckpts[1].name == "checkpoint_gen_6.json"
+    assert not (ckpt_dir / "checkpoint_gen_2.json").exists()
+
+

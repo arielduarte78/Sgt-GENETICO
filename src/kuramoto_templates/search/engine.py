@@ -839,7 +839,30 @@ class GAEngine:
         )
         cp_path = self.checkpoint_dir / f"checkpoint_gen_{gen}.json"
         save_checkpoint_atomic(state, cp_path)
+        if self.config.checkpoint_keep_count > 0:
+            self._prune_checkpoints()
         return cp_path
+
+    def _prune_checkpoints(self) -> None:
+        """Keep only the most recent checkpoints to prevent disk exhaustion."""
+        if self.config.checkpoint_keep_count <= 0:
+            return
+        ckpts = list(self.checkpoint_dir.glob("checkpoint_gen_*.json"))
+
+        def _get_gen(p: Path) -> int:
+            try:
+                return int(p.stem.split("_")[-1])
+            except ValueError:
+                return -1
+
+        ckpts.sort(key=_get_gen)
+        excess = len(ckpts) - self.config.checkpoint_keep_count
+        if excess > 0:
+            for p in ckpts[:excess]:
+                try:
+                    p.unlink(missing_ok=True)
+                except OSError:
+                    pass
 
     @classmethod
     def resume(

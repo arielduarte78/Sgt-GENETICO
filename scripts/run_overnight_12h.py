@@ -93,6 +93,7 @@ COMMON_CONFIG = {
     "island_pop_size": 48,
     "num_islands": 6,
     "checkpoint_interval": 5,
+    "checkpoint_keep_count": 3,
     "evaluator": "scaled",
 }
 
@@ -491,6 +492,7 @@ def main() -> None:
             island_pop_size=COMMON_CONFIG["island_pop_size"],
             num_islands=COMMON_CONFIG["num_islands"],
             checkpoint_interval=COMMON_CONFIG["checkpoint_interval"],
+            checkpoint_keep_count=COMMON_CONFIG["checkpoint_keep_count"],
             evaluator=COMMON_CONFIG["evaluator"],
         )
         configs.append(cfg)

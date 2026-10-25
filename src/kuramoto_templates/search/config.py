@@ -33,6 +33,7 @@ class GAConfig:
     seed: int = 42
     num_workers: int = 1
     checkpoint_interval: int = 5
+    checkpoint_keep_count: int = 3
     evaluator: str = "plain"
     min_m: int = 2
     max_m: int = 10
@@ -61,6 +62,10 @@ class GAConfig:
             raise ValueError(f"lam_floor_hat must be strictly positive, got {self.lam_floor_hat}.")
         if not (self.h_eff_min > 0.0):
             raise ValueError(f"h_eff_min must be strictly positive, got {self.h_eff_min}.")
+        if self.checkpoint_keep_count < 0:
+            raise ValueError(
+                f"checkpoint_keep_count must be >= 0, got {self.checkpoint_keep_count}."
+            )
 
         if self.num_islands < 1:
             raise ValueError(f"num_islands must be >= 1, got {self.num_islands}.")

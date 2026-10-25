@@ -31,9 +31,9 @@ def save_checkpoint_atomic(state: CheckpointState, filepath: Path | str) -> None
     temp_path = target_path.with_suffix(".tmp")
 
     data = asdict(state)
-    # Serialize to temp file
+    # Serialize to temp file (compact JSON to save disk space and I/O time)
     with temp_path.open("w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2)
+        json.dump(data, f, separators=(",", ":"))
 
     # Atomic rename / replace
     os.replace(temp_path, target_path)
