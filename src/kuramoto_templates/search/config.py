@@ -21,6 +21,7 @@ class GAConfig:
     tol: float = 1e-8
     lam_floor: float = 1e-7
     lam_floor_hat: float = 1e-5
+    h_eff_min: float = 1e-4
     num_islands: int = 4
     island_pop_size: int = 20
     num_generations: int = 20
@@ -58,6 +59,9 @@ class GAConfig:
             raise ValueError(f"lam_floor must be strictly positive, got {self.lam_floor}.")
         if not (self.lam_floor_hat > 0.0):
             raise ValueError(f"lam_floor_hat must be strictly positive, got {self.lam_floor_hat}.")
+        if not (self.h_eff_min > 0.0):
+            raise ValueError(f"h_eff_min must be strictly positive, got {self.h_eff_min}.")
+
         if self.num_islands < 1:
             raise ValueError(f"num_islands must be >= 1, got {self.num_islands}.")
         if self.island_pop_size < 2:

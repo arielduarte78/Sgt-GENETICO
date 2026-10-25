@@ -39,6 +39,7 @@ class EvalConfig:
     # Clarabel(1e-9) es <= 7.73e-8 y con SCS convergido es <= 5.04e-6. El valor 1e-5 representa
     # >100x el desacuerdo de Clarabel y >2x el de SCS convergido, preservando S7 (~3.2e-4).
     lam_floor_hat: float = 1e-5
+    h_eff_min: float = 1e-4
 
     def __post_init__(self) -> None:
         """Valida la positividad y coherencia de los parámetros."""
@@ -78,7 +79,12 @@ class EvalConfig:
             raise ValueError(
                 f"lam_floor_hat debe ser estrictamente positivo, recibido {self.lam_floor_hat}."
             )
+        if self.h_eff_min <= 0.0:
+            raise ValueError(
+                f"h_eff_min debe ser estrictamente positivo, recibido {self.h_eff_min}."
+            )
         valid_solvers = {"CLARABEL", "SCS"}
+
         if self.solver_name.upper() not in valid_solvers:
             raise ValueError(
                 f"Solver '{self.solver_name}' no soportado. Solvers válidos: {valid_solvers}."

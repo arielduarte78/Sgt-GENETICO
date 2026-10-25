@@ -233,6 +233,7 @@ class ScaledSDPEvaluator:
         self,
         config: EvalConfig | None = None,
         lam_floor_hat: float | None = None,
+        h_eff_min: float | None = None,
     ) -> None:
         self.config = config or EvalConfig()
         self.plain_evaluator = SDPEvaluator(self.config)
@@ -241,6 +242,11 @@ class ScaledSDPEvaluator:
             float(lam_floor_hat)
             if lam_floor_hat is not None
             else getattr(self.config, "lam_floor_hat", 1e-5)
+        )
+        self.h_eff_min = (
+            float(h_eff_min)
+            if h_eff_min is not None
+            else getattr(self.config, "h_eff_min", 1e-4)
         )
 
     def evaluate_phase1(
@@ -266,7 +272,7 @@ class ScaledSDPEvaluator:
         h_eff = compute_h_eff(x_arr, phi_arr, sheets)
 
         # Validación de rango admisible de escala
-        if h_eff < 1e-4 or h_eff > 0.1:
+        if h_eff < self.h_eff_min or h_eff > 0.1:
             res_plain = self.plain_evaluator.evaluate_phase1(x, phi)
             s_plain = float(res_plain.s) if res_plain.s is not None else 1.0
             lam_plain = float(res_plain.lam) if res_plain.lam is not None else float("-inf")
@@ -509,7 +515,7 @@ class ScaledSDPEvaluator:
         )
         h_eff = compute_h_eff(x_arr, phi_arr, sheets)
 
-        if h_eff < 1e-4 or h_eff > 0.1:
+        if h_eff < self.h_eff_min or h_eff > 0.1:
             return self.plain_evaluator.evaluate_phase2(x, phi, eps=eps)
 
         T = build_scaled_basis_t(x_arr, phi_arr, sheets, ref_sheet, h_eff)
@@ -676,7 +682,7 @@ class ScaledSDPEvaluator:
         min_d_a = float(np.min(x_arr + A_d @ p_vec))
 
         lam_min_M = float(np.min(np.linalg.eigvalsh(M)))
-        if T is not None and h_eff >= 1e-4:
+        if T is not None and h_eff >= self.h_eff_min:
             G_hat = (T.T @ L_w @ T) / (h_eff**2)
             lam_min_G = float(np.min(np.linalg.eigvalsh(G_hat)))
         else:
@@ -685,7 +691,7 @@ class ScaledSDPEvaluator:
 
         floor_target = (
             self.lam_floor_hat
-            if (T is not None and h_eff >= 1e-4)
+            if (T is not None and h_eff >= self.h_eff_min)
             else self.config.lam_floor
         )
 
@@ -714,8 +720,13 @@ class ScaledSDPEvaluator:
             solver_name="CLARABEL",
             lam_floor=self.config.lam_floor,
             lam_floor_hat=self.lam_floor_hat,
+            h_eff_min=self.h_eff_min,
         )
-        cl9_ev = ScaledSDPEvaluator(config=cl9_cfg, lam_floor_hat=self.lam_floor_hat)
+        cl9_ev = ScaledSDPEvaluator(
+            config=cl9_cfg,
+            lam_floor_hat=self.lam_floor_hat,
+            h_eff_min=self.h_eff_min,
+        )
         res_cl9 = cl9_ev.evaluate_phase1(x, phi, genome=genome)
         lam_cl9 = float(res_cl9.lam) if res_cl9.lam is not None else float("-inf")
         cl9_ok = bool(
@@ -732,8 +743,13 @@ class ScaledSDPEvaluator:
             solver_name="SCS",
             lam_floor=self.config.lam_floor,
             lam_floor_hat=self.lam_floor_hat,
+            h_eff_min=self.h_eff_min,
         )
-        scs_ev = ScaledSDPEvaluator(config=scs_cfg, lam_floor_hat=self.lam_floor_hat)
+        scs_ev = ScaledSDPEvaluator(
+            config=scs_cfg,
+            lam_floor_hat=self.lam_floor_hat,
+            h_eff_min=self.h_eff_min,
+        )
         res_scs = scs_ev.evaluate_phase1(x, phi, genome=genome)
         lam_scs = float(res_scs.lam) if res_scs.lam is not None else float("-inf")
 

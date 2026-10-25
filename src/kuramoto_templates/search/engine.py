@@ -35,6 +35,7 @@ from kuramoto_templates.search.operators.dispatcher import (
 from kuramoto_templates.search.runlog import RunLogger
 from kuramoto_templates.search.seeds import (
     create_c4_seed,
+    create_champion_3178_seed,
     create_s7_direct_seed,
 )
 from kuramoto_templates.search.selection import (
@@ -134,6 +135,7 @@ class GAEngine:
                 solver_tol=config.tol,
                 lam_floor=config.lam_floor,
                 lam_floor_hat=getattr(config, "lam_floor_hat", 1e-5),
+                h_eff_min=getattr(config, "h_eff_min", 1e-4),
             )
             if getattr(config, "evaluator", "plain") == "scaled":
                 from kuramoto_templates.evaluators.scaled import ScaledSDPEvaluator
@@ -141,6 +143,7 @@ class GAEngine:
                 eval_inst: Any = ScaledSDPEvaluator(
                     eval_cfg,
                     lam_floor_hat=getattr(config, "lam_floor_hat", 1e-5),
+                    h_eff_min=getattr(config, "h_eff_min", 1e-4),
                 )
             else:
                 eval_inst = SDPEvaluator(eval_cfg)
@@ -587,6 +590,18 @@ class GAEngine:
                             phenotype_override=(seed_ind.phenotype_x, seed_ind.phenotype_phi),
                         )
                         pop.append(ind_seed)
+
+                    # Inyectar campeón verificado ID 3178 (mu* = 0.692569)
+                    champ_seed = create_champion_3178_seed()
+                    ind_champ = self._evaluate(
+                        genome=champ_seed.genome,
+                        parent_ids=(),
+                        operator_name="seed_champ_3178",
+                        island=island_idx,
+                        generation=0,
+                        phenotype_override=(champ_seed.phenotype_x, champ_seed.phenotype_phi),
+                    )
+                    pop.append(ind_champ)
                 else:
                     s7_seed = create_s7_direct_seed()
                     ind_s7 = self._evaluate(
