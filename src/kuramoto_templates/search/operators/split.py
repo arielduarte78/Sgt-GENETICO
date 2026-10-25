@@ -32,14 +32,15 @@ def split(
     genome: Genome,
     rng: np.random.Generator,
     delta_phi: float = 0.005,
+    max_m: int = 10,
 ) -> Genome:
     """Split a cluster into two subclusters.
 
     Preserves total mass and circular barycenter of the split pair.
     Pure function: returns a new Genome without mutating inputs.
-    If genome.m >= 10, returns an identical copy.
+    If genome.m >= max_m, returns an identical copy.
     """
-    if genome.m >= 10:
+    if genome.m >= max_m:
         return Genome(
             m=genome.m,
             K_ref=genome.K_ref,

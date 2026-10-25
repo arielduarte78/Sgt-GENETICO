@@ -612,7 +612,7 @@ class GAEngine:
 
             # Fill the rest with randomized valid genomes
             while len(pop) < self.config.island_pop_size:
-                m = int(init_rng.integers(2, 11))
+                m = int(init_rng.integers(self.config.min_m, self.config.max_m + 1))
                 kref = int(init_rng.choice([4, 8, 12, 16]))
                 k = tuple(int(init_rng.integers(0, kref)) for _ in range(m))
                 sgn = tuple(int(init_rng.choice([-1, 1])) for _ in range(m))
@@ -712,6 +712,8 @@ class GAEngine:
                         p2.genome,
                         self.registry,
                         island_rng,
+                        min_m=self.config.min_m,
+                        max_m=self.config.max_m,
                     )
                     child_canonical = canonicalize(child_genome)
 

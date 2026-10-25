@@ -57,6 +57,8 @@ def select_and_apply_operator(
     parent2: Genome,
     registry: OperatorRegistry,
     rng: np.random.Generator,
+    min_m: int = 2,
+    max_m: int = 10,
 ) -> tuple[Genome, str]:
     """Select exactly one operator using a single call to rng.choice and apply it.
 
@@ -74,9 +76,9 @@ def select_and_apply_operator(
     elif chosen_op == "anchor_jump":
         child = anchor_jump(parent1, rng)
     elif chosen_op == "split":
-        child = split(parent1, rng)
+        child = split(parent1, rng, max_m=max_m)
     elif chosen_op == "merge":
-        child = merge(parent1, rng)
+        child = merge(parent1, rng, min_m=min_m)
     elif chosen_op == "crossover":
         child = crossover(parent1, parent2, rng)
     else:

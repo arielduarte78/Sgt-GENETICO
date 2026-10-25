@@ -33,6 +33,8 @@ class GAConfig:
     num_workers: int = 1
     checkpoint_interval: int = 5
     evaluator: str = "plain"
+    min_m: int = 2
+    max_m: int = 10
     operator_probs: dict[str, float] = field(
         default_factory=lambda: {
             "gauss_u": 0.25,
@@ -64,6 +66,10 @@ class GAConfig:
             raise ValueError(f"num_generations must be >= 1, got {self.num_generations}.")
         if self.tournament_k < 1:
             raise ValueError(f"tournament_k must be >= 1, got {self.tournament_k}.")
+        if self.min_m < 2:
+            raise ValueError(f"min_m must be >= 2, got {self.min_m}.")
+        if self.max_m < self.min_m:
+            raise ValueError(f"max_m must be >= min_m, got {self.max_m} < {self.min_m}.")
 
     def to_yaml(self, path: Path | str) -> None:
         """Serialize configuration to a YAML file."""

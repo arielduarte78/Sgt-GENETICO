@@ -1,0 +1,188 @@
+[
+  {
+    "run_id": "with_seeds_mu_0.6915_seed_42",
+    "mu_t": 0.6915,
+    "seed": 42,
+    "use_seeds": true,
+    "min_m": 2,
+    "max_m": 10,
+    "elapsed_seconds": 287.45385850000093,
+    "total_evaluations": 2223,
+    "cache_hits": 1657,
+    "hof_length": 20,
+    "hof_ge_floor_count": 20,
+    "max_mu_star": 0.6922903853180075,
+    "beats_4461": true,
+    "s7_distance_metrics": {
+      "m7_evaluations": 2109,
+      "min_distance_to_s7": 1.0696144093791919e-10,
+      "count_le_0.01": 1369,
+      "count_le_0.05": 1654,
+      "count_le_0.10": 1776,
+      "count_le_0.25": 1943
+    },
+    "winner": {
+      "id": 1115,
+      "m": 7,
+      "f": 0.00014998839224789203,
+      "s_star": 4.183524974348275e-11,
+      "lam_hat": 0.00014998839224789203,
+      "mu_star": 0.6922903853180075
+    }
+  },
+  {
+    "run_id": "with_seeds_mu_0.6915_seed_123",
+    "mu_t": 0.6915,
+    "seed": 123,
+    "use_seeds": true,
+    "min_m": 2,
+    "max_m": 10,
+    "elapsed_seconds": 288.47197120000055,
+    "total_evaluations": 2171,
+    "cache_hits": 1709,
+    "hof_length": 20,
+    "hof_ge_floor_count": 20,
+    "max_mu_star": 0.6919549630802133,
+    "beats_4461": true,
+    "s7_distance_metrics": {
+      "m7_evaluations": 2040,
+      "min_distance_to_s7": 1.0696144093791919e-10,
+      "count_le_0.01": 1331,
+      "count_le_0.05": 1654,
+      "count_le_0.10": 1757,
+      "count_le_0.25": 1915
+    },
+    "winner": {
+      "id": 1547,
+      "m": 7,
+      "f": 0.00016707589509522096,
+      "s_star": 1.0966729297484651e-10,
+      "lam_hat": 0.00016707589509522096,
+      "mu_star": 0.6919549630802133
+    }
+  },
+  {
+    "run_id": "with_seeds_mu_0.6915_seed_999",
+    "mu_t": 0.6915,
+    "seed": 999,
+    "use_seeds": true,
+    "min_m": 2,
+    "max_m": 10,
+    "elapsed_seconds": 293.44670340000084,
+    "total_evaluations": 2206,
+    "cache_hits": 1674,
+    "hof_length": 20,
+    "hof_ge_floor_count": 20,
+    "max_mu_star": 0.6923918332600121,
+    "beats_4461": true,
+    "s7_distance_metrics": {
+      "m7_evaluations": 2064,
+      "min_distance_to_s7": 1.0696144093791919e-10,
+      "count_le_0.01": 1360,
+      "count_le_0.05": 1667,
+      "count_le_0.10": 1769,
+      "count_le_0.25": 1917
+    },
+    "winner": {
+      "id": 562,
+      "m": 7,
+      "f": 0.00016991259927071853,
+      "s_star": 1.8752052142840048e-11,
+      "lam_hat": 0.00016991259927071853,
+      "mu_star": 0.6923918332600121
+    }
+  },
+  {
+    "run_id": "with_seeds_mu_0.6920_seed_42",
+    "mu_t": 0.692,
+    "seed": 42,
+    "use_seeds": true,
+    "min_m": 2,
+    "max_m": 10,
+    "elapsed_seconds": 242.9300097000014,
+    "total_evaluations": 2239,
+    "cache_hits": 1641,
+    "hof_length": 20,
+    "hof_ge_floor_count": 20,
+    "max_mu_star": 0.6925687926316073,
+    "beats_4461": true,
+    "s7_distance_metrics": {
+      "m7_evaluations": 2125,
+      "min_distance_to_s7": 1.0696144093791919e-10,
+      "count_le_0.01": 1358,
+      "count_le_0.05": 1646,
+      "count_le_0.10": 1771,
+      "count_le_0.25": 1940
+    },
+    "winner": {
+      "id": 3178,
+      "m": 7,
+      "f": 0.00012071910222410858,
+      "s_star": 1.716513852963113e-10,
+      "lam_hat": 0.00012071910222410858,
+      "mu_star": 0.6925687926316073
+    }
+  },
+  {
+    "run_id": "with_seeds_mu_0.6920_seed_123",
+    "mu_t": 0.692,
+    "seed": 123,
+    "use_seeds": true,
+    "min_m": 2,
+    "max_m": 10,
+    "elapsed_seconds": 213.41634870000053,
+    "total_evaluations": 2162,
+    "cache_hits": 1718,
+    "hof_length": 20,
+    "hof_ge_floor_count": 20,
+    "max_mu_star": 0.6924341342310344,
+    "beats_4461": true,
+    "s7_distance_metrics": {
+      "m7_evaluations": 2030,
+      "min_distance_to_s7": 1.0696144093791919e-10,
+      "count_le_0.01": 1334,
+      "count_le_0.05": 1648,
+      "count_le_0.10": 1755,
+      "count_le_0.25": 1903
+    },
+    "winner": {
+      "id": 3232,
+      "m": 7,
+      "f": 8.936082893226664e-05,
+      "s_star": 1.3984871480175147e-11,
+      "lam_hat": 8.936082893226664e-05,
+      "mu_star": 0.6924341342310344
+    }
+  },
+  {
+    "run_id": "with_seeds_mu_0.6920_seed_999",
+    "mu_t": 0.692,
+    "seed": 999,
+    "use_seeds": true,
+    "min_m": 2,
+    "max_m": 10,
+    "elapsed_seconds": 267.06430360000013,
+    "total_evaluations": 2128,
+    "cache_hits": 1752,
+    "hof_length": 20,
+    "hof_ge_floor_count": 20,
+    "max_mu_star": 0.6923918332600121,
+    "beats_4461": true,
+    "s7_distance_metrics": {
+      "m7_evaluations": 1997,
+      "min_distance_to_s7": 1.0696144093791919e-10,
+      "count_le_0.01": 1348,
+      "count_le_0.05": 1656,
+      "count_le_0.10": 1759,
+      "count_le_0.25": 1894
+    },
+    "winner": {
+      "id": 562,
+      "m": 7,
+      "f": 8.032339206784962e-05,
+      "s_star": 3.713788128849893e-11,
+      "lam_hat": 8.032339206784962e-05,
+      "mu_star": 0.6923918332600121
+    }
+  }
+]

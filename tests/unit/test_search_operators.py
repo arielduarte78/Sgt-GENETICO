@@ -251,3 +251,16 @@ def test_operator_dispatcher_uses_single_rng_choice() -> None:
     assert rng.choice_calls == 1
     assert op_name in registry.probabilities
     assert_valid_phenotype(child)
+
+
+def test_split_and_merge_custom_bounds() -> None:
+    """Split and merge should respect custom min_m and max_m bounds."""
+    rng = np.random.default_rng(42)
+    genome_m8 = Genome(m=8, K_ref=4, k=(0,) * 8, sgn=(1,) * 8, ell=(-2.0,) * 8, u=(0.0,) * 8)
+    res_split = split(genome_m8, rng, max_m=8)
+    assert res_split.m == 8
+
+    genome_m5 = Genome(m=5, K_ref=4, k=(0,) * 5, sgn=(1,) * 5, ell=(-2.0,) * 5, u=(0.0,) * 5)
+    res_merge = merge(genome_m5, rng, min_m=5)
+    assert res_merge.m == 5
+

@@ -17,14 +17,15 @@ from kuramoto_templates.search.operators.split import _encode_phase_to_genes
 def merge(
     genome: Genome,
     rng: np.random.Generator,
+    min_m: int = 2,
 ) -> Genome:
     """Merge two neighboring clusters into one.
 
     Preserves combined mass and circular barycenter of the merged pair.
     Pure function: returns a new Genome without mutating inputs.
-    If genome.m <= 2, returns an identical copy.
+    If genome.m <= min_m, returns an identical copy.
     """
-    if genome.m <= 2:
+    if genome.m <= min_m:
         return Genome(
             m=genome.m,
             K_ref=genome.K_ref,
