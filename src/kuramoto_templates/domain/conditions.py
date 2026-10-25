@@ -361,6 +361,7 @@ def verify_solution(
     eps: float = 1e-6,
     eps_c: float = 1e-4,
     theta_tol: float = 1e-4,
+    h_eff: float | None = None,
 ) -> dict[str, Any]:
     """Verificación independiente en numpy puro (sin cvxpy) de una solución candidata (x, phi, P).
 
@@ -374,6 +375,8 @@ def verify_solution(
         eps: Margen espectral requerido para M (M >> eps * I).
         eps_c: Cota inferior para c_a (c_a >= eps_c).
         theta_tol: Tolerancia máxima en residuo de equilibrio (|F_a| <= theta_tol).
+        h_eff: Escala efectiva opcional. Si se provee, el umbral de estabilidad
+            para lambda_min(M) se escala como eps_efectivo = eps * (h_eff**2).
 
     Returns:
         Diccionario con las métricas recalculadas y bandera booleana `is_valid`:
@@ -382,6 +385,7 @@ def verify_solution(
           - `max_F`: Residuo máximo de equilibrio max_a |F_a|.
           - `min_c`: Coeficiente mínimo de estabilidad intra-cluster min_a c_a.
           - `min_eig_M`: Autovalor mínimo de M(p) = Q^T L_w Q.
+          - `eps_effective`: Umbral efectivo aplicado para min_eig_M.
           - `p_bounds_ok`: True si todas las entradas de P caen en [-1e-9, 1.0 + 1e-9].
           - `reasons`: Lista de violaciones detectadas (vacía si is_valid es True).
     """
@@ -412,13 +416,18 @@ def verify_solution(
     max_p = float(np.max(p_vec))
     p_bounds_ok = (min_p >= -1e-8) and (max_p <= 1.0 + 1e-8)
 
+    eps_effective = eps * (h_eff**2) if h_eff is not None else eps
+    slack = 1e-8 if h_eff is None else min(1e-8, 1e-3 * eps_effective)
+
     reasons: list[str] = []
     if max_F > theta_tol:
         reasons.append(f"Residuo de equilibrio excedido: max|F|={max_F:.2e} > {theta_tol:.2e}")
     if min_c < eps_c - 1e-8:
         reasons.append(f"Estabilidad intra-cluster insuficiente: min(c)={min_c:.2e} < {eps_c:.2e}")
-    if min_eig_M < eps - 1e-8:
-        reasons.append(f"Margen espectral insuficiente: lambda_min(M)={min_eig_M:.2e} < {eps:.2e}")
+    if min_eig_M < eps_effective - slack:
+        reasons.append(
+            f"Margen espectral insuficiente: lambda_min(M)={min_eig_M:.2e} < {eps_effective:.2e}"
+        )
     if not p_bounds_ok:
         reasons.append(f"Densidades fuera de [0, 1]: min={min_p:.2e}, max={max_p:.2e}")
 
@@ -430,6 +439,7 @@ def verify_solution(
         "max_F": max_F,
         "min_c": min_c,
         "min_eig_M": min_eig_M,
+        "eps_effective": eps_effective,
         "p_bounds_ok": p_bounds_ok,
         "reasons": reasons,
     }

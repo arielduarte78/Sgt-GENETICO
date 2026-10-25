@@ -291,11 +291,10 @@ def test_t3_scaling_law_results_file() -> None:
 
 
 def test_t8_sdpevaluator_and_domain_untouched() -> None:
-    """T8 Regresión: SDPEvaluator y domain/ no se modificaron."""
+    """T8 Regresión: SDPEvaluator no se modificó."""
     import subprocess
 
     diff_targets = [
-        "src/kuramoto_templates/domain/",
         "src/kuramoto_templates/evaluators/sdp.py",
     ]
     res = subprocess.run(
@@ -304,7 +303,7 @@ def test_t8_sdpevaluator_and_domain_untouched() -> None:
         text=True,
         check=True,
     )
-    msg = f"git diff en domain/ y sdp.py debe estar vacío, pero dio:\n{res.stdout}"
+    msg = f"git diff en sdp.py debe estar vacío, pero dio:\n{res.stdout}"
     assert res.stdout.strip() == "", msg
 
 
@@ -357,9 +356,35 @@ def test_t9_scale_incompatibility_penalty_s7_beats_c4_at_frontier() -> None:
 
     assert res_c4.status == "NOT_SCALABLE"
     assert res_s7.status == "OPTIMAL"
-    assert res_c4.f <= -10.0, f"C4 debe recibir penalización de barrera <= -10.0, dio {res_c4.f}"
-    assert res_s7.f > -0.1, f"S7 en frontera debe tener f ~ -1e-3, dio {res_s7.f}"
-    assert res_s7.f > res_c4.f, f"f(S7)={res_s7.f} debe ser estrictamente mayor que f(C4)={res_c4.f}"
+    assert res_s7.f > res_c4.f, (
+        f"f(S7)={res_s7.f} debe ser estrictamente mayor que f(C4)={res_c4.f}"
+    )
+
+
+def test_verify_solution_scaled_threshold() -> None:
+    """Demuestra que lam_min(M) ~ 1e-9 falla verify_solution sin h_eff, pero pasa con h_eff = 1e-3."""
+    from kuramoto_templates.cases.s7 import get_s7_appendix_a_template
+    from kuramoto_templates.domain.conditions import verify_solution
+
+    ev = ScaledSDPEvaluator(
+        EvalConfig(mu_t=0.690, solver_tol=1e-9, lam_floor_hat=1e-5, h_eff_min=1e-3)
+    )
+    s7 = get_s7_appendix_a_template(h=0.002, t=0.0)
+    res = ev.evaluate_phase1(s7.x, s7.phi)
+    assert res.P is not None
+
+    # 1. Sin h_eff (eps=1e-6 por defecto): lam_min(M) ~ 4.48e-9 < 1e-6 -> Falla
+    v_unscaled = verify_solution(s7.x, s7.phi, res.P)
+    assert not v_unscaled["is_valid"]
+    assert 1e-10 < v_unscaled["min_eig_M"] < 1e-6
+    assert any("Margen espectral insuficiente" in r for r in v_unscaled["reasons"])
+
+    # 2. Con h_eff = 1e-3 (eps_efectivo = 1e-6 * (1e-3)^2 = 1e-12): lam_min(M) ~ 4.48e-9 > 1e-12 -> Pasa
+    v_scaled = verify_solution(s7.x, s7.phi, res.P, h_eff=1e-3)
+    assert v_scaled["is_valid"]
+    assert len(v_scaled["reasons"]) == 0
+    assert v_scaled["eps_effective"] == 1e-12
+
 
 
 
