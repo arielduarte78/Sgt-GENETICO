@@ -1,0 +1,128 @@
+[
+  {
+    "run_id": "no_seeds_mu_0.6915_seed_42",
+    "mu_t": 0.6915,
+    "seed": 42,
+    "elapsed_seconds": 153.16085569999996,
+    "total_evaluations": 3199,
+    "cache_hits": 681,
+    "hof_length": 20,
+    "hof_ge_floor_count": 20,
+    "max_mu_star": 0.6276935241502271,
+    "s7_rediscovered_hof": 0,
+    "s7_rediscovered_cache": 90,
+    "winner": {
+      "id": 3850,
+      "m": 10,
+      "f": -0.06415205942765342,
+      "s_star": 0.06415205942765342,
+      "lam_hat": 0.009879315752407691,
+      "mu_star": 0.6276935241502271
+    }
+  },
+  {
+    "run_id": "no_seeds_mu_0.6915_seed_123",
+    "mu_t": 0.6915,
+    "seed": 123,
+    "elapsed_seconds": 143.81541079999806,
+    "total_evaluations": 3285,
+    "cache_hits": 595,
+    "hof_length": 20,
+    "hof_ge_floor_count": 20,
+    "max_mu_star": 0.66589047924307,
+    "s7_rediscovered_hof": 0,
+    "s7_rediscovered_cache": 0,
+    "winner": {
+      "id": 3700,
+      "m": 10,
+      "f": -0.02564225244866072,
+      "s_star": 0.02564225244866072,
+      "lam_hat": 0.014840321605724634,
+      "mu_star": 0.66589047924307
+    }
+  },
+  {
+    "run_id": "no_seeds_mu_0.6915_seed_999",
+    "mu_t": 0.6915,
+    "seed": 999,
+    "elapsed_seconds": 139.36876459999985,
+    "total_evaluations": 3185,
+    "cache_hits": 695,
+    "hof_length": 20,
+    "hof_ge_floor_count": 20,
+    "max_mu_star": 0.6375613165886844,
+    "s7_rediscovered_hof": 0,
+    "s7_rediscovered_cache": 14,
+    "winner": {
+      "id": 3780,
+      "m": 10,
+      "f": -0.05480297324115806,
+      "s_star": 0.05480297324115806,
+      "lam_hat": 0.013551366128851758,
+      "mu_star": 0.6375613165886844
+    }
+  },
+  {
+    "run_id": "no_seeds_mu_0.6920_seed_42",
+    "mu_t": 0.692,
+    "seed": 42,
+    "elapsed_seconds": 143.90629420000187,
+    "total_evaluations": 3227,
+    "cache_hits": 653,
+    "hof_length": 20,
+    "hof_ge_floor_count": 20,
+    "max_mu_star": 0.6291043725539943,
+    "s7_rediscovered_hof": 0,
+    "s7_rediscovered_cache": 111,
+    "winner": {
+      "id": 3869,
+      "m": 10,
+      "f": -0.0632916184468848,
+      "s_star": 0.0632916184468848,
+      "lam_hat": 0.010028058564883209,
+      "mu_star": 0.6291043725539943
+    }
+  },
+  {
+    "run_id": "no_seeds_mu_0.6920_seed_123",
+    "mu_t": 0.692,
+    "seed": 123,
+    "elapsed_seconds": 144.32622069999707,
+    "total_evaluations": 3289,
+    "cache_hits": 591,
+    "hof_length": 20,
+    "hof_ge_floor_count": 20,
+    "max_mu_star": 0.6652017857233357,
+    "s7_rediscovered_hof": 0,
+    "s7_rediscovered_cache": 0,
+    "winner": {
+      "id": 3796,
+      "m": 10,
+      "f": -0.026822753107757606,
+      "s_star": 0.026822753107757606,
+      "lam_hat": 0.012535772337351526,
+      "mu_star": 0.6652017857233357
+    }
+  },
+  {
+    "run_id": "no_seeds_mu_0.6920_seed_999",
+    "mu_t": 0.692,
+    "seed": 999,
+    "elapsed_seconds": 137.96150560000024,
+    "total_evaluations": 3199,
+    "cache_hits": 681,
+    "hof_length": 20,
+    "hof_ge_floor_count": 20,
+    "max_mu_star": 0.6373514229220898,
+    "s7_rediscovered_hof": 0,
+    "s7_rediscovered_cache": 14,
+    "winner": {
+      "id": 3879,
+      "m": 10,
+      "f": -0.05598772184288463,
+      "s_star": 0.05598772184288463,
+      "lam_hat": 0.012435391979143036,
+      "mu_star": 0.6373514229220898
+    }
+  }
+]
