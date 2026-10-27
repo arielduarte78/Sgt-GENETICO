@@ -1,0 +1,219 @@
+{
+  "diagnostics_1e10": {
+    "Campeon R1 (ID 125678)": {
+      "mu_cert": 0.6925280064772675,
+      "max_F": 9.58871024227016e-14,
+      "min_c": 0.21574448933893067,
+      "min_slack_eig": -4.322195866597607e-12,
+      "lam_min_realized": 7.910970271404328e-11,
+      "p_min": 0.0,
+      "p_max": 0.9999999988388344,
+      "status": "optimal"
+    },
+    "Campeon R3 (ID 4)": {
+      "mu_cert": 0.6925687916957306,
+      "max_F": 1.6849685294690312e-13,
+      "min_c": 0.21578199068118387,
+      "min_slack_eig": -1.7935154350905505e-11,
+      "lam_min_realized": 5.6906115822039924e-11,
+      "p_min": 0.0,
+      "p_max": 0.9999999993914288,
+      "status": "optimal"
+    },
+    "S7(h=1e-3, t=0)": {
+      "mu_cert": 0.6920105101759579,
+      "max_F": 6.86395384974503e-14,
+      "min_c": 0.2157453258570525,
+      "min_slack_eig": -5.149986078299768e-12,
+      "lam_min_realized": 8.202785811304094e-11,
+      "p_min": 0.0,
+      "p_max": 0.999999994972457,
+      "status": "optimal"
+    },
+    "Punto Pulido (Multi-start)": {
+      "mu_cert": 0.6929992384832808,
+      "max_F": 3.159195127722114e-12,
+      "min_c": 0.21600375475792583,
+      "min_slack_eig": -2.40767496737592e-10,
+      "lam_min_realized": -6.960650337434746e-10,
+      "p_min": 0.0,
+      "p_max": 0.9999999319752199,
+      "status": "optimal"
+    }
+  },
+  "multi_start_stats": {
+    "joint_min": 0.6916861330449271,
+    "joint_mean": 0.6923524435298484,
+    "joint_max": 0.6929992039611795,
+    "dx_min": 0.6917785966210233,
+    "dx_mean": 0.692262234972201,
+    "dx_max": 0.6927310033417237,
+    "dphi_min": 0.6921730402865702,
+    "dphi_mean": 0.6925419551422977,
+    "dphi_max": 0.6926465583569368
+  },
+  "realized_sweep": [
+    {
+      "target_lam": 1e-12,
+      "candidate": "Campeon R1 (ID 125678)",
+      "mu_cert": 0.692532848355934,
+      "lam_realized": -4.150196228742636e-11,
+      "status": "optimal"
+    },
+    {
+      "target_lam": 1e-12,
+      "candidate": "Campeon R3 (ID 4)",
+      "mu_cert": 0.6925687924919631,
+      "lam_realized": 1.3553453799730929e-12,
+      "status": "optimal"
+    },
+    {
+      "target_lam": 1e-12,
+      "candidate": "S7(h=1e-3, t=0)",
+      "mu_cert": 0.6920201794127718,
+      "lam_realized": -2.796655142708919e-11,
+      "status": "optimal"
+    },
+    {
+      "target_lam": 1e-12,
+      "candidate": "Punto Pulido (Multi-start)",
+      "mu_cert": 0.6923068706645878,
+      "lam_realized": -6.641269173793206e-12,
+      "status": "optimal"
+    },
+    {
+      "target_lam": 1e-11,
+      "candidate": "Campeon R1 (ID 125678)",
+      "mu_cert": 0.6925323486000058,
+      "lam_realized": -2.781821044587272e-11,
+      "status": "optimal"
+    },
+    {
+      "target_lam": 1e-11,
+      "candidate": "Campeon R3 (ID 4)",
+      "mu_cert": 0.6925687924548721,
+      "lam_realized": 1.0183975915443359e-11,
+      "status": "optimal"
+    },
+    {
+      "target_lam": 1e-11,
+      "candidate": "S7(h=1e-3, t=0)",
+      "mu_cert": 0.6920193648987905,
+      "lam_realized": -1.7999517427988243e-11,
+      "status": "optimal"
+    },
+    {
+      "target_lam": 1e-11,
+      "candidate": "Punto Pulido (Multi-start)",
+      "mu_cert": 0.6922937843304369,
+      "lam_realized": 8.231538033761607e-13,
+      "status": "optimal"
+    },
+    {
+      "target_lam": 1e-10,
+      "candidate": "Campeon R1 (ID 125678)",
+      "mu_cert": 0.6925280064772675,
+      "lam_realized": 7.910970271404328e-11,
+      "status": "optimal"
+    },
+    {
+      "target_lam": 1e-10,
+      "candidate": "Campeon R3 (ID 4)",
+      "mu_cert": 0.6925687916957306,
+      "lam_realized": 5.6906115822039924e-11,
+      "status": "optimal"
+    },
+    {
+      "target_lam": 1e-10,
+      "candidate": "S7(h=1e-3, t=0)",
+      "mu_cert": 0.6920105101759579,
+      "lam_realized": 8.202785811304094e-11,
+      "status": "optimal"
+    },
+    {
+      "target_lam": 1e-10,
+      "candidate": "Punto Pulido (Multi-start)",
+      "mu_cert": 0.6929992384832808,
+      "lam_realized": -6.960650337434746e-10,
+      "status": "optimal"
+    },
+    {
+      "target_lam": 1e-09,
+      "candidate": "Campeon R1 (ID 125678)",
+      "mu_cert": 0.6915217684855217,
+      "lam_realized": 7.684413167513485e-10,
+      "status": "optimal"
+    },
+    {
+      "target_lam": 1e-09,
+      "candidate": "Campeon R3 (ID 4)",
+      "mu_cert": 0.6913227220709091,
+      "lam_realized": 8.977440312473454e-10,
+      "status": "optimal"
+    },
+    {
+      "target_lam": 1e-09,
+      "candidate": "S7(h=1e-3, t=0)",
+      "mu_cert": 0.6911827800890067,
+      "lam_realized": 6.898898705332084e-10,
+      "status": "optimal"
+    },
+    {
+      "target_lam": 1e-09,
+      "candidate": "Punto Pulido (Multi-start)",
+      "mu_cert": 0.6908274011946381,
+      "lam_realized": 8.312413602771597e-10,
+      "status": "optimal"
+    },
+    {
+      "target_lam": 1e-08,
+      "candidate": "Campeon R1 (ID 125678)",
+      "mu_cert": 0.6783374230382914,
+      "lam_realized": 7.922454076726176e-09,
+      "status": "optimal"
+    },
+    {
+      "target_lam": 1e-08,
+      "candidate": "Campeon R3 (ID 4)",
+      "mu_cert": 0.6778103183923343,
+      "lam_realized": 8.213585978641176e-09,
+      "status": "optimal"
+    },
+    {
+      "target_lam": 1e-08,
+      "candidate": "S7(h=1e-3, t=0)",
+      "mu_cert": 0.6795349229649914,
+      "lam_realized": 7.050211830390595e-09,
+      "status": "optimal_inaccurate"
+    },
+    {
+      "target_lam": 1e-08,
+      "candidate": "Punto Pulido (Multi-start)",
+      "mu_cert": 0.6765791229266722,
+      "lam_realized": 8.521801268498396e-09,
+      "status": "optimal"
+    }
+  ],
+  "best_polished_point": {
+    "phenotype_x": [
+      0.13072487428122004,
+      0.13079565556906217,
+      0.13066308060769502,
+      0.130559157383706,
+      0.13061110930749825,
+      0.13064311824009667,
+      0.21600300461072197
+    ],
+    "phenotype_phi": [
+      -0.0009997464883867557,
+      0.0009975814007557016,
+      1.5693996175882952,
+      1.5721925519326596,
+      3.140594547174036,
+      3.142593439109993,
+      4.71238898038469
+    ],
+    "norm_dx": 0.00021532251398868936,
+    "norm_dphi": 4.097916615875102e-06
+  }
+}
