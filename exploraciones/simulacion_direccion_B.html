@@ -1,0 +1,611 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Cuatro grupos de Kuramoto</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=STIX+Two+Text:ital,wght@0,400;0,600;1,400&display=swap">
+<style>
+/* Layout: banco de pruebas. Un círculo de fases a la izquierda, constantes y verificaciones a la derecha;
+   debajo el mapa de parámetros, la curva de δ y la simulación del caso límite. */
+:root{
+  --bg:#F2F5F8; --surface:#FFFFFF; --fg:#13202C; --muted:#566677; --line:#D3DBE3; --soft:#E7EDF2;
+  --s0:#12808D; --s2:#C2511A; --p1:#5B49C6; --p3:#B02E7C; --none:#7C8D9D;
+  --ok:#1B7A47; --bad:#B3261E; --warn:#8F5A00;
+  --f-display:'Bricolage Grotesque','Segoe UI',system-ui,sans-serif;
+  --f-body:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --f-mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+  --f-math:'STIX Two Text','Times New Roman',Georgia,serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0D131A; --surface:#141C25; --fg:#E7EDF3; --muted:#94A6B8; --line:#2A3743; --soft:#1B2530;
+    --s0:#4CC2CF; --s2:#F08C57; --p1:#A294FF; --p3:#F27DBE; --none:#8A9BAC;
+    --ok:#5CCB8B; --bad:#FF7B72; --warn:#E3B04B; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0D131A; --surface:#141C25; --fg:#E7EDF3; --muted:#94A6B8; --line:#2A3743; --soft:#1B2530;
+  --s0:#4CC2CF; --s2:#F08C57; --p1:#A294FF; --p3:#F27DBE; --none:#8A9BAC;
+  --ok:#5CCB8B; --bad:#FF7B72; --warn:#E3B04B; color-scheme:dark;
+}
+body{
+  background:var(--bg); color:var(--fg); font:15px/1.55 var(--f-body);
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-block:28px 56px;
+}
+.page{max-width:1120px;margin:0 auto;display:flex;flex-direction:column;gap:56px}
+section{display:flex;flex-direction:column;gap:18px;min-width:0}
+.eyebrow{font:500 11.5px/1.4 var(--f-mono);letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+h1{font:700 clamp(2.1rem,5.4vw,3.4rem)/1.02 var(--f-display);letter-spacing:-.025em;margin:6px 0 0;text-wrap:balance}
+h2{font:600 1.5rem/1.15 var(--f-display);letter-spacing:-.015em;margin:0;text-wrap:balance}
+.lead{max-width:64ch;font-size:16.5px;color:var(--fg);margin:14px 0 0}
+.intro{max-width:66ch;color:var(--muted);margin:0}
+.m{font-family:var(--f-math);font-size:1.08em;font-style:normal;white-space:nowrap}
+.m i{font-style:italic}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.rule{border:0;border-top:1px solid var(--line);margin:0}
+.bench{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:22px;min-width:0}
+
+/* calculadora */
+.calc{display:grid;grid-template-columns:minmax(0,440px) minmax(0,1fr);gap:30px;align-items:start}
+.circle{width:100%;height:auto;display:block;max-width:440px;margin:0 auto}
+.circle text{font-family:var(--f-mono);font-size:12px;fill:var(--muted)}
+.controls{display:flex;flex-direction:column;gap:16px;min-width:0}
+.ctl{display:grid;grid-template-columns:1fr auto;gap:2px 12px;align-items:baseline}
+.ctl label{font-family:var(--f-math);font-size:1.12em}
+.ctl .val{font:500 13px var(--f-mono);font-variant-numeric:tabular-nums;text-align:right}
+.ctl input[type=range]{grid-column:1/-1;width:100%;accent-color:var(--s0);margin:4px 0 0}
+.ctl .hint{grid-column:1/-1;font-size:12.5px;color:var(--muted)}
+.btns{display:flex;flex-wrap:wrap;gap:8px}
+.btn{font:500 13.5px var(--f-body);padding:8px 14px;border-radius:6px;border:1px solid var(--fg);background:var(--fg);color:var(--bg);cursor:pointer}
+.btn.ghost{background:transparent;color:var(--fg);border-color:var(--line)}
+.btn:hover{border-color:var(--s0)}
+.btn:focus-visible,input:focus-visible,canvas:focus-visible{outline:2px solid var(--s0);outline-offset:2px}
+.checks{display:flex;flex-direction:column;gap:6px;margin:0;padding:0;list-style:none}
+.checks li{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:baseline;font-size:13.5px}
+.pill{font:500 11.5px var(--f-mono);padding:2px 8px;border-radius:99px;border:1px solid currentColor;white-space:nowrap}
+.pill.ok{color:var(--ok)}.pill.bad{color:var(--bad)}.pill.warn{color:var(--warn)}
+.verdict{margin:0;padding:12px 14px;border-radius:8px;background:var(--soft);font-size:14.5px}
+.verdict b{font-weight:600}
+
+.consts{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:22px}
+.k{border-top:1px solid var(--line);padding-top:8px;min-width:0}
+.kn{font:italic 1.25em/1 var(--f-math)}
+.kf{font:.95em/1.4 var(--f-math);color:var(--muted);margin:3px 0 4px;overflow-wrap:anywhere}
+.kv{font:500 15px var(--f-mono);font-variant-numeric:tabular-nums}
+
+.res{display:flex;flex-direction:column;gap:2px;margin-top:22px}
+.row{display:grid;grid-template-columns:minmax(150px,200px) minmax(0,1fr) minmax(150px,190px);gap:6px 16px;align-items:center;padding:9px 0;border-top:1px solid var(--line)}
+.who{display:flex;gap:10px;align-items:baseline;min-width:0}
+.chip{width:11px;height:11px;border-radius:50%;flex:none;align-self:center}
+.who .nm{font-family:var(--f-math);font-size:1.15em}
+.who .tol{font:12px var(--f-mono);color:var(--muted)}
+.track{position:relative;height:10px;background:var(--soft);border-radius:2px}
+.fill{position:absolute;top:0;bottom:0;min-width:3px;border-radius:2px}
+.mid{position:absolute;top:-4px;bottom:-4px;width:1px;background:var(--muted);opacity:.7}
+.rng{font:12.5px var(--f-mono);font-variant-numeric:tabular-nums;text-align:right}
+.axis{display:grid;grid-template-columns:minmax(150px,200px) minmax(0,1fr) minmax(150px,190px);gap:16px;font:11px var(--f-mono);color:var(--muted)}
+.axis div:nth-child(2){display:flex;justify-content:space-between}
+.nline{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;margin-top:14px;font-size:14px}
+.nline input{width:110px;font:500 14px var(--f-mono);padding:5px 8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--fg)}
+
+/* heatmap y gráfico */
+canvas{display:block;width:100%;touch-action:none}
+#heat{cursor:crosshair;border-radius:4px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:12.5px;color:var(--muted);margin-top:10px}
+.legend span{display:inline-flex;gap:7px;align-items:center}
+.sw{width:14px;height:14px;border-radius:3px;border:1px solid var(--line)}
+.chartsvg{width:100%;height:auto;display:block}
+.chartsvg text{font-family:var(--f-mono);font-size:11px;fill:var(--muted)}
+.chartsvg .lbl{fill:var(--fg)}
+
+/* simulación */
+.sim{display:grid;grid-template-columns:minmax(0,460px) minmax(0,1fr);gap:28px;align-items:start}
+.read{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:2px 0 4px}
+.read div{border-top:1px solid var(--line);padding-top:6px}
+.read b{display:block;font:500 17px var(--f-mono);font-variant-numeric:tabular-nums}
+.read span{font-size:12px;color:var(--muted)}
+.note{border-left:3px solid var(--warn);padding:2px 0 2px 14px;font-size:14px;display:flex;flex-direction:column;gap:6px}
+.note p{margin:0}
+.find{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:22px}
+.find div{border-top:2px solid var(--fg);padding-top:10px;min-width:0}
+.find h3{font:600 1.05rem/1.25 var(--f-display);margin:0 0 6px}
+.find p{margin:0;color:var(--muted);font-size:14.5px}
+.src{font-size:12.5px;color:var(--muted);max-width:70ch}
+
+@media (max-width:860px){
+  .calc,.sim{grid-template-columns:minmax(0,1fr)}
+  .row,.axis{grid-template-columns:minmax(0,1fr)}
+  .rng{text-align:left}
+  .axis div:first-child,.axis div:last-child{display:none}
+  .bench{padding:16px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<main class="page">
+<header>
+  <div class="eyebrow">Proposición · borrador pendiente de revisión</div>
+  <h1>Cuatro grupos de Kuramoto</h1>
+  <p class="lead">Si existe un mínimo local no sincronizado de la energía de Kuramoto y el grafo cumple <span class="m"><i>μ</i>(<i>G</i>) ≥ ¾ − <i>δ</i></span>, las fases se reparten en cuatro grupos alrededor de <span class="m">0, π/2, π, 3π/2</span>. Mové <span class="m"><i>δ</i>, <i>h</i>, <i>a</i></span> y mirá qué garantiza la conclusión, dónde deja de decir algo útil y cómo se ve el caso límite <span class="m"><i>μ</i> = ¾</span>.</p>
+  <p class="src" style="margin-top:10px">Es una consecuencia cuantitativa del argumento del paper. No se afirma que sea novedosa.</p>
+</header>
+
+<section id="calc-sec">
+  <h2>La proposición, con números</h2>
+  <p class="intro">Los arcos son las tolerancias angulares. El anillo exterior lleva S₀ y S₂; el interior, P₁ y P₃. Los puntos son una configuración compatible con la conclusión, no un mínimo real.</p>
+  <div class="bench">
+    <div class="calc">
+      <svg id="circ" class="circle" viewBox="0 0 420 420" role="img" aria-label="Círculo de fases con los cuatro grupos"></svg>
+      <div class="controls">
+        <div class="ctl"><label for="s_d"><i>δ</i></label><span class="val" id="o_d"></span>
+          <input id="s_d" type="range" min="-14" max="-1.505" step="0.005">
+          <span class="hint">Escala logarítmica. El enunciado permite hasta 1/32.</span></div>
+        <div class="ctl"><label for="s_h"><i>h</i></label><span class="val" id="o_h"></span>
+          <input id="s_h" type="range" min="-3" max="-0.1049" step="0.002">
+          <span class="hint">Escala logarítmica, entre 0 y π/4.</span></div>
+        <div class="ctl"><label for="s_a"><i>a</i></label><span class="val" id="o_a"></span>
+          <input id="s_a" type="range" min="0.01" max="1.57" step="0.002">
+          <span class="hint">Entre 0 y π/2.</span></div>
+        <div class="btns">
+          <button class="btn" id="b_best" type="button">Mejores h y a para este δ</button>
+        </div>
+        <ul class="checks" id="checks"></ul>
+        <p class="verdict" id="verdict"></p>
+      </div>
+    </div>
+
+    <div class="consts" id="consts"></div>
+
+    <div class="res" id="res"></div>
+    <div class="axis" aria-hidden="true"><div></div><div><span>0</span><span>¼</span><span>½</span></div><div></div></div>
+    <div class="nline">
+      <label for="n_in">Con <span class="m"><i>n</i></span> =</label>
+      <input id="n_in" type="number" min="4" step="100" value="1000">
+      <span id="n_out"></span>
+    </div>
+  </div>
+</section>
+
+<section id="heat-sec">
+  <h2>Dónde funcionan h y a</h2>
+  <p class="intro">Para el <span class="m"><i>δ</i></span> elegido, cada punto es un par <span class="m">(<i>h</i>, <i>a</i>)</span> pintado según la cota inferior de P₁ y P₃. Tocá o arrastrá para moverte. La línea fina marca donde la cota cruza cero.</p>
+  <div class="bench">
+    <canvas id="heat" aria-label="Mapa de la cota inferior de P1 y P3 según h y a" tabindex="0"></canvas>
+    <div class="legend">
+      <span><i class="sw" style="background:var(--s0)"></i>cota positiva: hay cuatro grupos grandes</span>
+      <span><i class="sw" style="background:var(--bad)"></i>cota negativa: P₁ y P₃ sin garantía</span>
+      <span><i class="sw" style="background:var(--soft)"></i>s ≥ 1/8: no se cumple la hipótesis</span>
+    </div>
+  </div>
+</section>
+
+<section id="curve-sec">
+  <h2>Para qué δ dice algo</h2>
+  <p class="intro">Para cada <span class="m"><i>δ</i></span> se eligió el mejor <span class="m">(<i>h</i>, <i>a</i>)</span>. La proposición solo da cuatro grupos grandes cuando la curva queda por encima de cero.</p>
+  <div class="bench"><svg id="curve" class="chartsvg" viewBox="0 0 720 310" role="img" aria-label="Mejor cota inferior de P1 y P3 en función de delta"></svg></div>
+</section>
+
+<section id="sim-sec">
+  <h2>El caso límite μ = ¾, simulado</h2>
+  <p class="intro">Grafo de 24 nodos en cuatro bloques de 6. Cada nodo se conecta con su bloque y con los dos bloques vecinos, no con el opuesto. Así <span class="m">(<i>δ</i><sub>mín</sub> + 1)/<i>n</i> = 18/24 = ¾</span> exacto. Se parte de las fases 0, π/2, π, 3π/2 y se baja por gradiente la energía <span class="m"><i>E</i> = Σ<sub>aristas</sub> (1 − cos(<i>θ<sub>i</sub></i> − <i>θ<sub>j</sub></i>))</span>.</p>
+  <div class="bench">
+    <div class="sim">
+      <div><canvas id="simc" aria-label="Simulación de Kuramoto sobre el círculo de fases"></canvas></div>
+      <div class="controls">
+        <div class="read">
+          <div><b id="r_E">144.00</b><span>energía <i>E</i></span></div>
+          <div><b id="r_r">0.000</b><span>orden |Σe<sup>iθ</sup>|/<i>n</i></span></div>
+          <div><b id="r_g">0.000</b><span>máx |∇<i>E</i>|</span></div>
+        </div>
+        <canvas id="simE" style="height:120px" aria-label="Energía a lo largo del descenso"></canvas>
+        <div class="ctl"><label for="s_eps">Perturbación</label><span class="val" id="o_eps"></span>
+          <input id="s_eps" type="range" min="0" max="0.5" step="0.005" value="0.05"></div>
+        <div class="ctl"><label for="s_spf">Velocidad</label><span class="val" id="o_spf"></span>
+          <input id="s_spf" type="range" min="1" max="8" step="1" value="2"></div>
+        <div class="btns">
+          <button class="btn" id="b_go" type="button">Perturbar y soltar</button>
+          <button class="btn ghost" id="b_pause" type="button">Pausar</button>
+        </div>
+        <div class="note">
+          <p><b>Cálculo propio sobre este grafo, no parte del enunciado.</b></p>
+          <p>El Hessiano en los cuatro grupos es la suma de los laplacianos de las cuatro camarillas: semidefinido, con cuatro direcciones nulas (girar cada bloque).</p>
+          <p>Al girar los bloques en <span class="m"><i>φ</i><sub>0</sub>…<i>φ</i><sub>3</sub></span>, la energía cambia en <span class="m">≈ (<i>n</i>²/96)·Σ(<i>φ<sub>k</sub></i> − <i>φ</i><sub><i>k</i>+1</sub>)³</span>, que toma ambos signos. Es un punto crítico degenerado y una silla, no un mínimo local. Con perturbación 0 el gradiente es cero y nada se mueve.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Lo que sale de esto</h2>
+  <div class="find">
+    <div><h3>La hipótesis s &lt; 1/8 recorta mucho δ</h3><p id="f1"></p></div>
+    <div><h3>Cuatro grupos grandes pide δ aún menor</h3><p id="f2"></p></div>
+    <div><h3>En μ = ¾ el estado de cuatro grupos no es mínimo</h3><p id="f3">En la simulación todas las perturbaciones terminan sincronizadas. Es una comprobación sobre un grafo concreto, no una demostración general.</p></div>
+  </div>
+  <hr class="rule">
+  <p class="src">Los valores de esta página se calculan con las fórmulas del enunciado tal como están escritas. Los tamaños mostrados son las cotas de la conclusión, no los tamaños de un grafo real.</p>
+</section>
+</main>
+
+<script>
+(function(){
+"use strict";
+var PI=Math.PI, $=function(id){return document.getElementById(id)};
+var A_MAX=PI/2-1e-3, H_MAX=PI/4-1e-4, LH0=-3, LH1=Math.log10(H_MAX);
+
+/* ---------- matemática de la proposición ---------- */
+function omc(x){var s=Math.sin(x/2);return 2*s*s}              // 1 - cos x, estable para x chico
+function calc(d,h,a){
+  var xs=Math.sqrt(4*d+8*d*d), ys=Math.sqrt(8*d+16*d*d);
+  var b=(3*d+4*d*d)/omc(h);
+  var s=Math.sqrt(3*d+4*d*d+2*b);
+  var q=(ys+4*s+8*h*h)/omc(2*a);
+  var L=xs+(0.5+2*d)*Math.sin(2*h)+q+(0.5+2*s)*omc(a);
+  return {d:d,h:h,a:a,xs:xs,ys:ys,b:b,s:s,q:q,L:L,
+    lowS:0.25-s,upS:0.25+d,lowP:0.25-d-q/2-L/2,upP:0.25+s+L/2,ok:s<0.125};
+}
+function bestFor(d,nh,na){
+  nh=nh||160; na=na||80; var best=null;
+  for(var i=0;i<nh;i++){
+    var h=Math.pow(10,LH0+(LH1-LH0)*i/(nh-1));
+    for(var j=0;j<na;j++){
+      var a=0.01+(A_MAX-0.01)*j/(na-1), c=calc(d,h,a);
+      if(c.ok&&(!best||c.lowP>best.lowP))best=c;
+    }
+  }
+  return best;
+}
+function threshold(){          // mayor δ con alguna elección que deja la cota de P positiva
+  var lo=-9,hi=-4;
+  for(var k=0;k<16;k++){var mid=(lo+hi)/2,b=bestFor(Math.pow(10,mid),110,60);
+    if(b&&b.lowP>0)lo=mid;else hi=mid;}
+  return lo;
+}
+function feasLimit(){          // mayor δ para el que s<1/8 es posible con algún h
+  var lo=-6,hi=-1.5;
+  for(var k=0;k<40;k++){var mid=(lo+hi)/2,c=calc(Math.pow(10,mid),H_MAX,PI/2-0.01);
+    if(c.ok)lo=mid;else hi=mid;}
+  return lo;
+}
+
+/* ---------- formato ---------- */
+var SUP={'0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹','-':'⁻'};
+function sci(x,dig){
+  if(x===0)return '0'; var e=Math.floor(Math.log10(Math.abs(x))), m=x/Math.pow(10,e);
+  if(Math.abs(+m.toFixed(dig-1))>=10){m/=10;e+=1}
+  return m.toFixed(dig-1)+'·10'+String(e).split('').map(function(c){return SUP[c]}).join('');
+}
+function num(x){var ax=Math.abs(x); if(ax===0)return '0'; if(ax<1e-3||ax>=1e5)return sci(x,3); return x.toFixed(ax<0.1?5:4)}
+function bnd(x){return x.toFixed(6)}
+function pct(x){return (100*x).toFixed(x<0.1?2:1)+' %'}
+
+/* ---------- estado ---------- */
+var st={ld:-10,lh:-1.78,a:0.455,n:1000};
+var cur=null, heatDirty=true;
+
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim()}
+function rgb(hex){hex=hex.replace('#','');if(hex.length===3)hex=hex.split('').map(function(c){return c+c}).join('');
+  return [parseInt(hex.slice(0,2),16),parseInt(hex.slice(2,4),16),parseInt(hex.slice(4,6),16)]}
+function mix(c1,c2,t){return 'rgb('+[0,1,2].map(function(i){return Math.round(c1[i]+(c2[i]-c1[i])*t)}).join(',')+')'}
+
+/* ---------- círculo de fases ---------- */
+function polar(r,t){return [210+r*Math.cos(t),210-r*Math.sin(t)]}
+function arcPath(r,c,w){
+  var p1=polar(r,c-w),p2=polar(r,c+w);
+  return 'M'+p1[0].toFixed(2)+' '+p1[1].toFixed(2)+'A'+r+' '+r+' 0 '+(2*w>PI?1:0)+' 0 '+p2[0].toFixed(2)+' '+p2[1].toFixed(2);
+}
+function groupsOf(c){
+  return [
+    {k:'S0',nm:'S<sub>0</sub>',ctr:0,w:2*c.h,col:'--s0',ring:166,tol:'2h',lo:c.lowS,up:c.upS,ctrTxt:'0'},
+    {k:'S2',nm:'S<sub>2</sub>',ctr:PI,w:c.h,col:'--s2',ring:166,tol:'h',lo:c.lowS,up:c.upS,ctrTxt:'π'},
+    {k:'P1',nm:'P<sub>1</sub>',ctr:PI/2,w:c.a,col:'--p1',ring:144,tol:'a',lo:c.lowP,up:c.upP,ctrTxt:'π/2'},
+    {k:'P3',nm:'P<sub>3</sub>',ctr:3*PI/2,w:c.a,col:'--p3',ring:144,tol:'a',lo:c.lowP,up:c.upP,ctrTxt:'3π/2'}
+  ];
+}
+function drawCircle(c){
+  var g=groupsOf(c), s='', i;
+  s+='<circle cx="210" cy="210" r="166" fill="none" stroke="var(--line)" stroke-width="11" opacity=".55"/>';
+  s+='<circle cx="210" cy="210" r="144" fill="none" stroke="var(--line)" stroke-width="11" opacity=".55"/>';
+  s+='<circle cx="210" cy="210" r="112" fill="none" stroke="var(--line)" stroke-dasharray="3 5"/>';
+  var ticks=[['0',0],['π/2',PI/2],['π',PI],['3π/2',3*PI/2]];
+  ticks.forEach(function(t){var p=polar(196,t[1]);
+    s+='<text x="'+p[0].toFixed(1)+'" y="'+p[1].toFixed(1)+'" text-anchor="middle" dominant-baseline="central">'+t[0]+'</text>';});
+  g.forEach(function(q){
+    s+='<path d="'+arcPath(q.ring,q.ctr,q.w)+'" fill="none" stroke="var('+q.col+')" stroke-width="11" opacity=".9"/>';
+    var p1=polar(q.ring-9,q.ctr),p2=polar(q.ring+9,q.ctr);
+    s+='<line x1="'+p1[0].toFixed(1)+'" y1="'+p1[1].toFixed(1)+'" x2="'+p2[0].toFixed(1)+'" y2="'+p2[1].toFixed(1)+'" stroke="var('+q.col+')" stroke-width="2"/>';
+  });
+  // nodos de ejemplo: S0,S2 = 1/4 de n; P1,P3 = 1/4 - q/2; el resto sin grupo
+  var NV=240, u=Math.min(c.q,0.5), nS=Math.round(NV/4), nP=Math.round(NV*(0.5-u)/2), nU=NV-2*nS-2*nP, k=0, phi=0.6180339887;
+  function fr(){k++;return (k*phi)%1}
+  function jit(){return (((k*7)%5)-2)*2.2}
+  g.forEach(function(q){
+    var n=q.ring===166?nS:nP;
+    for(i=0;i<n;i++){var f=fr(),t=q.ctr+q.w*(2*f-1),p=polar(q.ring+jit(),t);
+      s+='<circle cx="'+p[0].toFixed(1)+'" cy="'+p[1].toFixed(1)+'" r="2.5" fill="var('+q.col+')"/>';}
+  });
+  for(i=0;i<nU;i++){var t2=fr()*2*PI,p=polar(112+((k*11)%7-3)*2.4,t2);
+    s+='<circle cx="'+p[0].toFixed(1)+'" cy="'+p[1].toFixed(1)+'" r="2.3" fill="none" stroke="var(--none)" stroke-width="1.2"/>';}
+  s+='<text x="210" y="205" text-anchor="middle" style="fill:var(--fg);font-size:13px">fases θ</text>';
+  s+='<text x="210" y="223" text-anchor="middle">sin grupo: anillo punteado</text>';
+  $('circ').innerHTML=s;
+}
+
+/* ---------- tabla de constantes, verificaciones y resultado ---------- */
+var CONSTS=[
+  ['xs','<i>x</i><sub>*</sub>','√(4<i>δ</i> + 8<i>δ</i>²)'],
+  ['ys','<i>y</i><sub>*</sub>','√(8<i>δ</i> + 16<i>δ</i>²)'],
+  ['b','<i>b</i>','(3<i>δ</i> + 4<i>δ</i>²) / (1 − cos <i>h</i>)'],
+  ['s','<i>s</i>','√(3<i>δ</i> + 4<i>δ</i>² + 2<i>b</i>)'],
+  ['q','<i>q</i>','(<i>y</i><sub>*</sub> + 4<i>s</i> + 8<i>h</i>²) / (1 − cos 2<i>a</i>)'],
+  ['L','<i>L</i>','<i>x</i><sub>*</sub> + (½ + 2<i>δ</i>) sin 2<i>h</i> + <i>q</i> + (½ + 2<i>s</i>)(1 − cos <i>a</i>)']
+];
+$('consts').innerHTML=CONSTS.map(function(r){
+  return '<div class="k"><div class="kn">'+r[1]+'</div><div class="kf">'+r[2]+'</div><div class="kv" id="v_'+r[0]+'"></div></div>';
+}).join('');
+
+var ROWS=['S0','S2','P1','P3','NG'];
+$('res').innerHTML=ROWS.map(function(k){
+  return '<div class="row" id="row_'+k+'"><div class="who"><i class="chip" id="chip_'+k+'"></i><span class="nm" id="nm_'+k+'"></span><span class="tol" id="tol_'+k+'"></span></div>'+
+    '<div class="track"><div class="fill" id="fill_'+k+'"></div><div class="mid"></div></div><div class="rng" id="rng_'+k+'"></div></div>';
+}).join('');
+
+function pill(cls,txt){return '<span class="pill '+cls+'">'+txt+'</span>'}
+function render(){
+  var d=Math.pow(10,st.ld), h=Math.pow(10,st.lh), a=st.a, c=calc(d,h,a); cur=c;
+  $('o_d').textContent=sci(d,2); $('o_h').textContent=h.toFixed(4)+' rad · '+(h*180/PI).toFixed(2)+'°';
+  $('o_a').textContent=a.toFixed(3)+' rad · '+(a*180/PI).toFixed(1)+'°';
+  $('s_d').value=st.ld; $('s_h').value=st.lh; $('s_a').value=a;
+  CONSTS.forEach(function(r){$('v_'+r[0]).textContent=num(c[r[0]])});
+
+  var lowOK=c.ok&&c.lowP>0;
+  $('checks').innerHTML=
+    '<li>'+pill('ok','cumple')+'<span>0 &lt; <i>δ</i> ≤ 1/32, 0 &lt; <i>h</i> &lt; π/4, 0 &lt; <i>a</i> &lt; π/2</span></li>'+
+    '<li>'+pill(c.ok?'ok':'bad',c.ok?'cumple':'no cumple')+'<span><i>s</i> &lt; 1/8, con <i>s</i> = '+num(c.s)+'</span></li>'+
+    '<li>'+pill(c.q<1?(c.q<0.1?'ok':'warn'):'bad',c.q<1?(c.q<0.1?'chica':'grande'):'vacía')+'<span><i>q</i> = '+num(c.q)+' acota los nodos sin grupo</span></li>'+
+    '<li>'+pill(lowOK?'ok':'bad',lowOK?'positiva':'no positiva')+'<span>cota inferior de P₁ y P₃ = '+num(c.lowP)+'</span></li>';
+
+  var v;
+  if(!c.ok) v='Con estos valores falla <b>s &lt; 1/8</b>, así que la proposición no dice nada.';
+  else if(!lowOK) v='Las hipótesis valen, pero la cota inferior de P₁ y P₃ es <b>negativa</b>: solo quedan garantizados S₀ y S₂'+(c.q<1?' y que a lo sumo '+pct(c.q)+' de los nodos queda sin grupo.':'. Además <i>q</i> ≥ 1, así que la cota de nodos sin grupo no aporta.');
+  else v='Hay <b>cuatro grupos grandes</b>: S₀ y S₂ con cerca de 25 % cada uno, P₁ y P₃ con al menos '+pct(c.lowP)+', y a lo sumo '+pct(c.q)+' sin grupo.';
+  $('verdict').innerHTML=v;
+
+  var gs=groupsOf(c);
+  gs.forEach(function(q){
+    $('chip_'+q.k).style.background='var('+q.col+')';
+    $('nm_'+q.k).innerHTML=q.nm;
+    var center=q.ctrTxt, tolv=q.tol==='2h'?2*c.h:(q.tol==='h'?c.h:c.a);
+    $('tol_'+q.k).textContent='±'+(tolv*180/PI).toFixed(tolv*180/PI<10?2:1)+'° de '+center;
+    var lo=Math.max(0,q.lo), up=Math.min(0.5,Math.max(0,q.up));
+    var f=$('fill_'+q.k); f.style.background='var('+q.col+')';
+    f.style.left=(lo/0.5*100)+'%'; f.style.width=Math.max(0,(up-lo)/0.5*100)+'%';
+    $('rng_'+q.k).textContent=bnd(q.lo)+' a '+bnd(q.up);
+  });
+  $('chip_NG').style.background='var(--none)'; $('nm_NG').textContent='sin grupo'; $('tol_NG').textContent='cualquier fase';
+  var fg=$('fill_NG'); fg.style.background='var(--none)'; fg.style.left='0'; fg.style.width=Math.min(0.5,c.q)/0.5*100+'%';
+  $('rng_NG').textContent='0 a '+(c.q<1?bnd(c.q):'q = '+num(c.q)+' (vacío)');
+
+  var n=st.n;
+  $('n_out').innerHTML=c.ok?('S₀ y S₂: de '+Math.max(0,Math.ceil(n*c.lowS))+' a '+Math.floor(n*c.upS)+' nodos · P₁ y P₃: de '+Math.max(0,Math.ceil(n*c.lowP))+' a '+Math.floor(n*Math.max(0,c.upP))+' · sin grupo: hasta '+Math.min(n,Math.floor(n*c.q))):'hipótesis no válidas';
+
+  drawCircle(c);
+  if(heatDirty){buildHeat();heatDirty=false}
+  paintHeat(); moveCurveMarker();
+}
+
+/* ---------- mapa de (h, a) ---------- */
+var heat={off:null,W:0,H:0,dpr:1,ml:50,mr:10,mt:10,mb:34,pw:0,ph:0};
+function buildHeat(){
+  var cv=$('heat'), W=Math.max(280,cv.parentElement.clientWidth-0), H=Math.round(Math.min(360,W*0.56)), dpr=window.devicePixelRatio||1;
+  cv.width=Math.round(W*dpr); cv.height=Math.round(H*dpr); cv.style.height=H+'px';
+  heat.W=W;heat.H=H;heat.dpr=dpr; heat.pw=W-heat.ml-heat.mr; heat.ph=H-heat.mt-heat.mb;
+  var off=document.createElement('canvas'); off.width=cv.width; off.height=cv.height;
+  var g=off.getContext('2d'); g.scale(dpr,dpr);
+  var d=Math.pow(10,st.ld), cell=3, cols=Math.ceil(heat.pw/cell), rows=Math.ceil(heat.ph/cell), i, j;
+  var cs=rgb(css('--surface')), cp=rgb(css('--s0')), cn=rgb(css('--bad')), soft=css('--soft'), line=css('--line');
+  var vals=new Array(rows);
+  for(j=0;j<rows;j++){vals[j]=new Array(cols);
+    var a=Math.max(0.01,A_MAX*(1-(j+0.5)/rows));
+    for(i=0;i<cols;i++){
+      var h=Math.pow(10,LH0+(LH1-LH0)*(i+0.5)/cols), c=calc(d,h,a);
+      var v=c.ok?c.lowP:NaN; vals[j][i]=v;
+      var x=heat.ml+i*cell, y=heat.mt+j*cell, w=Math.min(cell,heat.ml+heat.pw-x), hh=Math.min(cell,heat.mt+heat.ph-y);
+      if(isNaN(v)){g.fillStyle=((i+j)%3===0)?line:soft}
+      else if(v>0){g.fillStyle=mix(cs,cp,Math.min(1,v/0.25))}
+      else{g.fillStyle=mix(cs,cn,Math.min(1,-v/0.8))}
+      g.fillRect(x,y,w,hh);
+    }
+  }
+  g.fillStyle=css('--fg');
+  for(j=0;j<rows-1;j++)for(i=0;i<cols-1;i++){
+    var v0=vals[j][i]; if(isNaN(v0))continue;
+    var vr=vals[j][i+1], vd=vals[j+1][i];
+    if(!isNaN(vr)&&(v0>0)!==(vr>0))g.fillRect(heat.ml+(i+1)*cell-0.5,heat.mt+j*cell,1.2,cell);
+    if(!isNaN(vd)&&(v0>0)!==(vd>0))g.fillRect(heat.ml+i*cell,heat.mt+(j+1)*cell-0.5,cell,1.2);
+  }
+  g.strokeStyle=css('--line'); g.lineWidth=1; g.strokeRect(heat.ml-.5,heat.mt-.5,heat.pw+1,heat.ph+1);
+  g.fillStyle=css('--muted'); g.font='11px "IBM Plex Mono",monospace'; g.textBaseline='middle';
+  g.textAlign='center';
+  [[0.001,'0.001'],[0.01,'0.01'],[0.1,'0.1'],[H_MAX,'π/4']].forEach(function(t){
+    var x=heat.ml+heat.pw*(Math.log10(t[0])-LH0)/(LH1-LH0);
+    g.fillRect(x-.5,heat.mt+heat.ph,1,4); g.fillText(t[1],Math.min(x,heat.ml+heat.pw-8),heat.mt+heat.ph+16);
+  });
+  g.fillText('h (rad, escala log)',heat.ml+heat.pw/2,heat.H-4);
+  g.textAlign='right';
+  [[0,'0'],[0.5,'0.5'],[1,'1'],[PI/2,'π/2']].forEach(function(t){
+    var y=heat.mt+heat.ph*(1-t[0]/A_MAX); g.fillRect(heat.ml-4,y-.5,4,1); g.fillText(t[1],heat.ml-7,Math.min(y,heat.mt+heat.ph-6));
+  });
+  heat.off=off;
+}
+function paintHeat(){
+  var cv=$('heat'); if(!heat.off)return; var g=cv.getContext('2d');
+  g.setTransform(1,0,0,1,0,0); g.clearRect(0,0,cv.width,cv.height); g.drawImage(heat.off,0,0);
+  g.setTransform(heat.dpr,0,0,heat.dpr,0,0);
+  var x=heat.ml+heat.pw*(st.lh-LH0)/(LH1-LH0), y=heat.mt+heat.ph*(1-st.a/A_MAX);
+  g.strokeStyle=css('--fg'); g.lineWidth=1; g.globalAlpha=.45; g.beginPath();
+  g.moveTo(x,heat.mt);g.lineTo(x,heat.mt+heat.ph);g.moveTo(heat.ml,y);g.lineTo(heat.ml+heat.pw,y);g.stroke(); g.globalAlpha=1;
+  g.beginPath();g.arc(x,y,6,0,2*PI);g.fillStyle=css('--surface');g.fill();g.lineWidth=2.2;g.stroke();
+}
+function heatPointer(e){
+  var r=$('heat').getBoundingClientRect(), px=Math.min(heat.pw,Math.max(0,e.clientX-r.left-heat.ml)), py=Math.min(heat.ph,Math.max(0,e.clientY-r.top-heat.mt));
+  st.lh=LH0+(LH1-LH0)*px/heat.pw; st.a=Math.max(0.01,A_MAX*(1-py/heat.ph)); render();
+}
+(function(){var cv=$('heat'),down=false;
+  cv.addEventListener('pointerdown',function(e){down=true;cv.setPointerCapture(e.pointerId);heatPointer(e)});
+  cv.addEventListener('pointermove',function(e){if(down)heatPointer(e)});
+  cv.addEventListener('pointerup',function(){down=false});
+  cv.addEventListener('pointercancel',function(){down=false});
+  cv.addEventListener('keydown',function(e){
+    var step=e.shiftKey?0.1:0.02, ch=false;
+    if(e.key==='ArrowLeft'){st.lh=Math.max(LH0,st.lh-step);ch=true}
+    else if(e.key==='ArrowRight'){st.lh=Math.min(LH1,st.lh+step);ch=true}
+    else if(e.key==='ArrowUp'){st.a=Math.min(A_MAX,st.a+step*2);ch=true}
+    else if(e.key==='ArrowDown'){st.a=Math.max(0.01,st.a-step*2);ch=true}
+    if(ch){e.preventDefault();render()}});
+})();
+
+/* ---------- curva δ ---------- */
+var CX0=-14,CX1=-1.2,CY0=-1,CY1=0.27,CW=720,CH=310,cml=54,cmr=16,cmt=16,cmb=44, ldThr=0, ldFeas=0;
+function csx(l){return cml+(l-CX0)/(CX1-CX0)*(CW-cml-cmr)}
+function csy(v){return cmt+(CY1-Math.min(CY1,Math.max(CY0,v)))/(CY1-CY0)*(CH-cmt-cmb)}
+function buildCurve(){
+  ldThr=threshold(); ldFeas=feasLimit();
+  var pts=[], l;
+  for(l=CX0;l<=CX1+1e-9;l+=0.2){
+    if(l>ldFeas)break;
+    var b=bestFor(Math.pow(10,l),90,45); if(!b)break; pts.push([l,b.lowP]);
+  }
+  var s='';
+  var xf=csx(ldFeas);
+  s+='<rect x="'+xf.toFixed(1)+'" y="'+cmt+'" width="'+(CW-cmr-xf).toFixed(1)+'" height="'+(CH-cmt-cmb)+'" fill="var(--soft)"/>';
+  [0.25,0,-0.5,-1].forEach(function(v){
+    s+='<line x1="'+cml+'" x2="'+(CW-cmr)+'" y1="'+csy(v).toFixed(1)+'" y2="'+csy(v).toFixed(1)+'" stroke="var(--line)" '+(v===0?'':'stroke-dasharray="2 4"')+'/>';
+    s+='<text x="'+(cml-8)+'" y="'+csy(v).toFixed(1)+'" text-anchor="end" dominant-baseline="central">'+(v===0.25?'¼':v)+'</text>';
+  });
+  for(l=-14;l<=-2;l+=2){
+    s+='<line x1="'+csx(l).toFixed(1)+'" x2="'+csx(l).toFixed(1)+'" y1="'+(CH-cmb)+'" y2="'+(CH-cmb+4)+'" stroke="var(--muted)"/>';
+    s+='<text x="'+csx(l).toFixed(1)+'" y="'+(CH-cmb+18)+'" text-anchor="middle">10'+String(l).split('').map(function(c){return SUP[c]}).join('')+'</text>';
+  }
+  s+='<text x="'+((cml+CW-cmr)/2)+'" y="'+(CH-6)+'" text-anchor="middle">δ</text>';
+  s+='<text x="'+(cml+6)+'" y="'+(cmt+12)+'" class="lbl">mejor cota inferior de P₁ y P₃ (fracción de n)</text>';
+  s+='<path d="M'+pts.map(function(p){return csx(p[0]).toFixed(1)+' '+csy(p[1]).toFixed(1)}).join('L')+'" fill="none" stroke="var(--p1)" stroke-width="2.4" stroke-linejoin="round"/>';
+  var xt=csx(ldThr), y0=csy(0);
+  s+='<circle cx="'+xt.toFixed(1)+'" cy="'+y0.toFixed(1)+'" r="4.5" fill="var(--surface)" stroke="var(--fg)" stroke-width="2"/>';
+  s+='<text x="'+(xt+9).toFixed(1)+'" y="'+(y0-10).toFixed(1)+'" class="lbl">cruza cero en δ ≈ '+sci(Math.pow(10,ldThr),2)+'</text>';
+  var xm=csx(Math.log10(1/32));
+  s+='<line x1="'+xm.toFixed(1)+'" x2="'+xm.toFixed(1)+'" y1="'+cmt+'" y2="'+(CH-cmb)+'" stroke="var(--muted)" stroke-dasharray="4 3"/>';
+  s+='<text x="'+(xm-6).toFixed(1)+'" y="'+(cmt+48)+'" text-anchor="end" class="lbl">δ = 1/32, máximo del enunciado</text>';
+  s+='<text x="'+(xf-6).toFixed(1)+'" y="'+(cmt+30)+'" text-anchor="end">desde acá ningún h cumple s &lt; 1/8</text>';
+  s+='<line id="cmk" x1="0" x2="0" y1="'+cmt+'" y2="'+(CH-cmb)+'" stroke="var(--s0)" stroke-width="2"/>';
+  s+='<text id="cmt" x="0" y="'+(CH-cmb-8)+'" class="lbl">tu δ</text>';
+  $('curve').innerHTML=s;
+  $('f1').innerHTML='Con <span class="m"><i>δ</i> = 1/32</span> la suma 3<i>δ</i> + 4<i>δ</i>² ya supera 1/64, así que <span class="m"><i>s</i> &lt; 1/8</span> es imposible. El enunciado solo tiene contenido para <span class="m"><i>δ</i> ≲ '+sci(Math.pow(10,ldFeas),2)+'</span>.';
+  var b10=bestFor(1e-10);
+  $('f2').innerHTML='La cota de P₁ y P₃ solo es positiva para <span class="m"><i>δ</i> ≲ '+sci(Math.pow(10,ldThr),2)+'</span> con el mejor <span class="m">(<i>h</i>, <i>a</i>)</span>. Con <span class="m"><i>δ</i> = 10⁻¹⁰</span> queda en '+b10.lowP.toFixed(3)+' (<span class="m"><i>q</i> = '+b10.q.toFixed(3)+'</span>).';
+}
+function moveCurveMarker(){
+  var k=$('cmk'); if(!k)return; var x=csx(Math.min(CX1,Math.max(CX0,st.ld))).toFixed(1);
+  k.setAttribute('x1',x);k.setAttribute('x2',x);
+  var t=$('cmt'); t.setAttribute('x',(+x+(+x>CW-120?-8:8)));t.setAttribute('text-anchor',+x>CW-120?'end':'start');
+}
+
+/* ---------- simulación ---------- */
+var M=6,N=24,blk=[],adj=[],edges=[],th=new Float64Array(N),sim={running:false,hist:[],eps:0.05};
+(function(){
+  for(var i=0;i<N;i++){blk.push(Math.floor(i/M));adj.push([])}
+  for(i=0;i<N;i++)for(var j=0;j<N;j++){
+    if(i===j)continue; var dd=((blk[i]-blk[j])%4+4)%4;
+    if(dd!==2){adj[i].push(j);if(i<j)edges.push([i,j])}
+  }
+})();
+var BCOL=['--s0','--p1','--s2','--p3'];
+function simE(){var e=0;edges.forEach(function(p){e+=1-Math.cos(th[p[0]]-th[p[1]])});return e}
+function simR(){var c=0,s=0;for(var i=0;i<N;i++){c+=Math.cos(th[i]);s+=Math.sin(th[i])}return Math.hypot(c,s)/N}
+function simG(){var mx=0;for(var i=0;i<N;i++){var g=0;adj[i].forEach(function(j){g+=Math.sin(th[i]-th[j])});mx=Math.max(mx,Math.abs(g))}return mx}
+function gauss(){var u=1-Math.random(),v=Math.random();return Math.sqrt(-2*Math.log(u))*Math.cos(2*PI*v)}
+function simReset(eps){
+  for(var i=0;i<N;i++)th[i]=blk[i]*PI/2+(eps>0?eps*gauss():0);
+  sim.hist=[simE()]; sim.running=eps>0; $('b_pause').textContent='Pausar'; drawSim();
+}
+function simStep(dt){
+  var g=new Float64Array(N);
+  for(var i=0;i<N;i++){var a=adj[i],s=0;for(var k=0;k<a.length;k++)s+=Math.sin(th[i]-th[a[k]]);g[i]=s}
+  for(i=0;i<N;i++)th[i]-=dt*g[i];
+}
+function sizeCanvas(cv,hOverride){
+  var W=Math.max(240,Math.min(cv.parentElement.clientWidth,460)), H=hOverride||W, dpr=window.devicePixelRatio||1;
+  cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);cv.style.height=H+'px';cv.style.maxWidth=W+'px';
+  var g=cv.getContext('2d'); g.setTransform(dpr,0,0,dpr,0,0); return {g:g,W:W,H:H};
+}
+function drawSim(){
+  var cv=$('simc'), o=sizeCanvas(cv), g=o.g, S=o.W, cx=S/2, R=S/2-22, fg=rgb(css('--fg'));
+  g.clearRect(0,0,S,S);
+  g.strokeStyle=css('--line');g.lineWidth=1.2;g.beginPath();g.arc(cx,cx,R,0,2*PI);g.stroke();
+  g.fillStyle=css('--muted');g.font='11px "IBM Plex Mono",monospace';g.textAlign='center';g.textBaseline='middle';
+  [['0',0],['π/2',PI/2],['π',PI],['3π/2',3*PI/2]].forEach(function(t){g.fillText(t[0],cx+(R+14)*Math.cos(t[1]),cx-(R+14)*Math.sin(t[1]))});
+  g.strokeStyle='rgba('+fg.join(',')+',.075)';g.lineWidth=1;g.beginPath();
+  edges.forEach(function(p){g.moveTo(cx+R*Math.cos(th[p[0]]),cx-R*Math.sin(th[p[0]]));g.lineTo(cx+R*Math.cos(th[p[1]]),cx-R*Math.sin(th[p[1]]))});
+  g.stroke();
+  for(var i=0;i<N;i++){g.globalAlpha=.78;g.fillStyle=css(BCOL[blk[i]]);g.beginPath();g.arc(cx+R*Math.cos(th[i]),cx-R*Math.sin(th[i]),6.5,0,2*PI);g.fill()}
+  g.globalAlpha=1;
+  $('r_E').textContent=simE().toFixed(2); $('r_r').textContent=simR().toFixed(3); $('r_g').textContent=simG().toFixed(3);
+  drawE();
+}
+function drawE(){
+  var cv=$('simE'), o=sizeCanvas(cv,120), g=o.g, W=o.W, H=o.H, h=sim.hist, E0=h[0]||1, ml=34,mb=16;
+  cv.style.maxWidth='none';
+  g.clearRect(0,0,W,H);
+  g.strokeStyle=css('--line');g.lineWidth=1;g.beginPath();g.moveTo(ml,4);g.lineTo(ml,H-mb);g.lineTo(W-4,H-mb);g.stroke();
+  g.fillStyle=css('--muted');g.font='10.5px "IBM Plex Mono",monospace';g.textAlign='right';g.textBaseline='middle';
+  g.fillText(E0.toFixed(0),ml-5,8);g.fillText('0',ml-5,H-mb);
+  g.textAlign='left';g.fillText('tiempo →',ml+4,H-5);
+  var span=Math.max(60,h.length-1);
+  g.strokeStyle=css('--s0');g.lineWidth=2;g.beginPath();
+  h.forEach(function(e,i){var x=ml+(W-ml-6)*i/span,y=4+(H-mb-8)*(1-Math.max(0,e)/E0);if(i===0)g.moveTo(x,y);else g.lineTo(x,y)});
+  g.stroke();
+}
+function frame(){
+  if(sim.running){
+    var spf=+$('s_spf').value;
+    for(var k=0;k<spf;k++)simStep(0.05);
+    sim.hist.push(simE());
+    if(simR()>0.99999&&simE()<1e-3){sim.running=false}
+    drawSim();
+  }
+  requestAnimationFrame(frame);
+}
+
+/* ---------- eventos ---------- */
+$('s_d').addEventListener('input',function(e){st.ld=+e.target.value;heatDirty=true;render()});
+$('s_h').addEventListener('input',function(e){st.lh=+e.target.value;render()});
+$('s_a').addEventListener('input',function(e){st.a=+e.target.value;render()});
+$('b_best').addEventListener('click',function(){var b=bestFor(Math.pow(10,st.ld),240,120); if(b){st.lh=Math.log10(b.h);st.a=b.a;render()}});
+$('n_in').addEventListener('input',function(e){var v=parseInt(e.target.value,10);if(v>=4){st.n=v;render()}});
+$('s_eps').addEventListener('input',function(e){sim.eps=+e.target.value;$('o_eps').textContent=sim.eps.toFixed(3)+' rad'});
+$('s_spf').addEventListener('input',function(e){$('o_spf').textContent=e.target.value+'×'});
+$('b_go').addEventListener('click',function(){simReset(sim.eps)});
+$('b_pause').addEventListener('click',function(){
+  if(!sim.running&&simR()>0.99999)return;
+  sim.running=!sim.running;this.textContent=sim.running?'Pausar':'Seguir';
+});
+var rz; window.addEventListener('resize',function(){clearTimeout(rz);rz=setTimeout(function(){heatDirty=true;render();drawSim()},120)});
+function themeChanged(){heatDirty=true;render();drawSim()}
+if(window.matchMedia){var mq=window.matchMedia('(prefers-color-scheme: dark)');
+  if(mq.addEventListener)mq.addEventListener('change',themeChanged);}
+new MutationObserver(themeChanged).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+
+/* ---------- arranque ---------- */
+buildCurve();
+var b0=bestFor(Math.pow(10,st.ld),240,120); st.lh=Math.log10(b0.h); st.a=b0.a;
+$('o_eps').textContent=sim.eps.toFixed(3)+' rad'; $('o_spf').textContent='2×';
+render();
+var reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+simReset(reduce?0:sim.eps);
+if(reduce){$('b_pause').textContent='Seguir'}
+requestAnimationFrame(frame);
+})();
+</script>
+
+</body></html>

@@ -136,3 +136,31 @@ Ejecuta `ruff check` y `mypy --strict`.
 make reproduce-eval
 ```
 Ejecuta el protocolo completo de evaluación, verifica identidades de dominio, contrastes Clarabel vs SCS, regresión contra literatura citada y genera el reporte JSON en `results/reproduce_eval_report.json`.
+---
+
+## 6. Exploraciones Complementarias (`exploraciones/`)
+
+Material exploratorio independiente del paquete `kuramoto_templates`: no forma parte de `src/`, no lo cubren `make test` ni `make lint`, y sus conclusiones se clasifican según la taxonomía de la Sección 2.
+
+### Dirección B: cotas cuantitativas cerca de $\mu = 3/4$
+- **`exploraciones/codigo_direccion_B.ipynb`** (notebook, numpy + matplotlib):
+  1. Grafica la región de parámetros de orden $(|\rho_1|, |\rho_2|)$ no descartada por la cota $2|\rho_1|^2 + |\rho_2|^2 \le 8\delta + 16\delta^2$ para $\mu(G) \ge 3/4 - \delta$ y $\delta \in \{10^{-2}, 10^{-3}, 10^{-4}\}$.
+  2. Calcula un margen suficiente $\delta(\varepsilon) = \min\left(1/32,\ \varepsilon^2 / \left(4(\sqrt{1+\varepsilon^2}+1)\right)\right)$ para que los parámetros de orden respeten una tolerancia $\varepsilon$.
+  3. Evalúa la cota de la proporción $N_a/n$ de nodos no conectados lejos de ser opuestos ($h = 1^\circ$, $a = 15^\circ$, objetivo $5\%$): con las fórmulas tal como están escritas, la cota solo garantiza el objetivo para $\delta \approx 10^{-12}$.
+- **`exploraciones/simulacion_direccion_B.html`** (página interactiva autocontenida; abrir en el navegador): proposición de los **cuatro grupos** alrededor de $0, \pi/2, \pi, 3\pi/2$ bajo $\mu(G) \ge 3/4 - \delta$. Permite mover $\delta, h, a$, muestra las constantes $x_*, y_*, b, s, q, L$, el mapa de $(h, a)$ donde la cota inferior de $P_1, P_3$ es positiva, la mejor cota en función de $\delta$, y una simulación de descenso por gradiente en el caso límite $\mu = 3/4$ (24 nodos en cuatro bloques de 6).
+
+**Estado:** la proposición es un **borrador pendiente de revisión** derivado del argumento de O'Keeffe (2026) — **CITADO / no verificado**. Las observaciones de la página (la hipótesis $s < 1/8$ restringe fuertemente $\delta$; la cota de $P_1, P_3$ solo es positiva para $\delta$ muy pequeño; en $\mu = 3/4$ el estado de cuatro grupos es un punto crítico degenerado tipo silla y las perturbaciones terminan sincronizadas) son **EVIDENCIA NUMÉRICA** sobre un grafo concreto, no una demostración general.
+
+### Dirección C: clústeres no equidistantes y $\mu$ crítico
+- **`exploraciones/codigo_direccion_C.ipynb`** (notebook, numpy + scipy + matplotlib):
+  1. **¿Qué pasa si los clústeres no son equidistantes?** Para grafos de 5 grupos en anillo (cada grupo conectado consigo mismo y con sus dos vecinos) con tamaños $(5,5,5,5,5)$, $(5,5,5,5,6)$ y $(5,6,5,6,5)$, integra el flujo gradiente desde fases perturbadas nodo a nodo (`solve_ivp`, DOP853, semilla 42), refina el equilibrio con `scipy.optimize.root`, verifica el residuo del gradiente, el menor autovalor del Hessiano proyectado sobre $\mathbf{1}^\perp$ y la dispersión intra-grupo, y compara con una segunda integración con tolerancias más estrictas.
+  2. **$\mu(G)$ crítico de pérdida de estabilidad:** partiendo de $(5,5,5,5,6)$, agrega aristas de a una (priorizando nodos de menor grado, desempate reproducible con semilla 42) y sigue el equilibrio no sincronizado por homotopía ponderada $0 \to 1$ en el peso de la arista nueva, hasta que el seguimiento falla o $\lambda_{\min} \le 10^{-7}$. Reporta $\mu$, $\lambda_{\min}$ y el punto de detención.
+
+**Estado:** **EVIDENCIA NUMÉRICA** (tolerancias y semillas explícitas en el código). Que el seguimiento se detenga **no demuestra** la inexistencia del equilibrio ni la sincronización global; los puntos intermedios de la homotopía son grafos ponderados, no grafos simples.
+
+### Ejecución
+Los notebooks están pensados para Google Colab o Jupyter y requieren `numpy`, `scipy` y `matplotlib`. `matplotlib` no es dependencia del paquete, así que localmente se agrega al vuelo (con el entorno de `make env`):
+```bash
+uv run --with jupyter --with matplotlib jupyter notebook exploraciones/
+```
+La página HTML no necesita instalación: se abre directamente en el navegador (carga fuentes de Google Fonts si hay conexión).
