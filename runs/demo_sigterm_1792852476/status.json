@@ -1,0 +1,12 @@
+{
+  "status": "interrupted",
+  "pid": 19924,
+  "generation": 0,
+  "total_generations": 100,
+  "best_f": 4.589499761589064e-09,
+  "best_m": 0,
+  "best_lam": 0.0,
+  "cache_hits": 0,
+  "total_evaluations": 0,
+  "updated_at": 1792852480.0543425
+}

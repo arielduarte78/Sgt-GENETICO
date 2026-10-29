@@ -1,0 +1,12 @@
+{
+  "status": "error",
+  "pid": 19712,
+  "generation": 0,
+  "total_generations": 0,
+  "best_f": -1.0,
+  "best_m": 0,
+  "best_lam": 0.0,
+  "cache_hits": 0,
+  "total_evaluations": 0,
+  "updated_at": 1792902934.692692
+}

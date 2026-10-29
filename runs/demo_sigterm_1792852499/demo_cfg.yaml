@@ -1,0 +1,21 @@
+allow_split_merge: true
+checkpoint_interval: 1
+fitness_noise: 1.0e-09
+island_pop_size: 6
+migration_count: 2
+migration_interval: 5
+mu_t: 0.69
+num_generations: 100
+num_islands: 2
+num_workers: 1
+operator_probs:
+  anchor_jump: 0.2
+  crossover: 0.15
+  gauss_u: 0.25
+  merge: 0.075
+  phase_dev: 0.25
+  split: 0.075
+seed: 42
+tol: 1.0e-08
+tournament_k: 3
+use_seeds: true

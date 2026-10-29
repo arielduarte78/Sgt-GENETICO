@@ -37,10 +37,14 @@ ENV/
 .vscode/
 *.swp
 *.swo
-
-# Outputs: ignore runs data, keep manifests and directory structure
+# Outputs: ignore runs data, keep manifests and compressed logs
 results/runs/*
 !results/runs/
 !results/runs/**/manifest.json
 !results/.gitkeep
-runs/
+
+runs/*
+!runs/*/
+!runs/**/*.gz
+!runs/**/*.zip
+!runs/**/manifest.json

@@ -1,0 +1,30 @@
+C:\Users\Usuario\OneDrive\Desktop\Sgt.Genetico\Sgt-GENETICO\src\kuramoto_templates\evaluators\scaled.py:422: UserWarning: Solution may be inaccurate. Try another solver, adjusting the solver settings, or solve with verbose=True for more information.
+  prob.solve(**solver_kwargs)  # type: ignore[no-untyped-call]
+C:\Users\Usuario\OneDrive\Desktop\Sgt.Genetico\Sgt-GENETICO\src\kuramoto_templates\evaluators\sdp.py:243: UserWarning: Solution may be inaccurate. Try another solver, adjusting the solver settings, or solve with verbose=True for more information.
+  prob.solve(**solver_kwargs)  # type: ignore[no-untyped-call]
+Traceback (most recent call last):
+  File "C:\Users\Usuario\OneDrive\Desktop\Sgt.Genetico\Sgt-GENETICO\src\kuramoto_templates\search\cli.py", line 88, in handle_run
+    results = engine.run()
+              ^^^^^^^^^^^^
+  File "C:\Users\Usuario\OneDrive\Desktop\Sgt.Genetico\Sgt-GENETICO\src\kuramoto_templates\search\engine.py", line 775, in run
+    self.update_status_file(status="running")
+  File "C:\Users\Usuario\OneDrive\Desktop\Sgt.Genetico\Sgt-GENETICO\src\kuramoto_templates\search\engine.py", line 819, in update_status_file
+    os.replace(temp_path, status_path)
+PermissionError: [WinError 5] Acceso denegado: 'runs\\night12h_seeded_mu06926_s2026\\status.tmp' -> 'runs\\night12h_seeded_mu06926_s2026\\status.json'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "C:\Users\Usuario\OneDrive\Desktop\Sgt.Genetico\Sgt-GENETICO\src\kuramoto_templates\search\cli.py", line 204, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "C:\Users\Usuario\OneDrive\Desktop\Sgt.Genetico\Sgt-GENETICO\src\kuramoto_templates\search\cli.py", line 200, in main
+    return int(parsed.func(parsed))
+               ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Usuario\OneDrive\Desktop\Sgt.Genetico\Sgt-GENETICO\src\kuramoto_templates\search\cli.py", line 98, in handle_run
+    _write_status(output_dir, status="error")
+  File "C:\Users\Usuario\OneDrive\Desktop\Sgt.Genetico\Sgt-GENETICO\src\kuramoto_templates\search\cli.py", line 47, in _write_status
+    os.replace(temp_path, status_path)
+PermissionError: [WinError 5] Acceso denegado: 'runs\\night12h_seeded_mu06926_s2026\\status.tmp' -> 'runs\\night12h_seeded_mu06926_s2026\\status.json'

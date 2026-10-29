@@ -1,0 +1,4 @@
+C:\Users\Usuario\OneDrive\Desktop\Sgt.Genetico\Sgt-GENETICO\src\kuramoto_templates\evaluators\scaled.py:422: UserWarning: Solution may be inaccurate. Try another solver, adjusting the solver settings, or solve with verbose=True for more information.
+  prob.solve(**solver_kwargs)  # type: ignore[no-untyped-call]
+C:\Users\Usuario\OneDrive\Desktop\Sgt.Genetico\Sgt-GENETICO\src\kuramoto_templates\evaluators\sdp.py:243: UserWarning: Solution may be inaccurate. Try another solver, adjusting the solver settings, or solve with verbose=True for more information.
+  prob.solve(**solver_kwargs)  # type: ignore[no-untyped-call]

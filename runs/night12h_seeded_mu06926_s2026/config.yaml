@@ -1,0 +1,28 @@
+allow_split_merge: true
+checkpoint_interval: 5
+checkpoint_keep_count: 3
+evaluator: scaled
+fitness_noise: 1.0e-09
+h_eff_min: 0.0008
+island_pop_size: 48
+lam_floor: 1.0e-07
+lam_floor_hat: 1.0e-05
+max_m: 10
+migration_count: 2
+migration_interval: 5
+min_m: 2
+mu_t: 0.6926
+num_generations: 3500
+num_islands: 6
+num_workers: 1
+operator_probs:
+  anchor_jump: 0.2
+  crossover: 0.15
+  gauss_u: 0.25
+  merge: 0.075
+  phase_dev: 0.25
+  split: 0.075
+seed: 2026
+tol: 1.0e-08
+tournament_k: 3
+use_seeds: true

@@ -1,0 +1,13 @@
+{
+  "status": "completed",
+  "pid": 9872,
+  "generation": 50,
+  "total_generations": 50,
+  "best_f": -0.02564225244866072,
+  "best_m": 10,
+  "best_lam": 0.014840321605724634,
+  "best_mu_star": null,
+  "cache_hits": 595,
+  "total_evaluations": 3285,
+  "updated_at": 1792888760.5371952
+}
