@@ -48,3 +48,10 @@ runs/*
 !runs/**/*.gz
 !runs/**/*.zip
 !runs/**/manifest.json
+
+# Regenerated evaluation/sweep outputs (exact filenames)
+results/numerical_floor_s7.json
+results/numerical_floor_s7.md
+results/reproduce_eval_report.json
+results/s7_h_sweep.json
+results/s7_roundtrip_error.json

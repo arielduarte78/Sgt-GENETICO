@@ -1,4 +1,4 @@
-# Sgt-GENETICO — Dirección A (equipo T16, Investigathón 2026)
+# Sgt-GENETICO — T16 (Investigathón 2026)
 
 Búsqueda numérica sobre la familia $S_7$ de O'Keeffe en el modelo de Kuramoto homogéneo: evaluador SDP con certificación espectral en 50 dígitos, algoritmo genético y ajuste local de masas. **No obtiene una cota nueva**; documenta un resultado negativo. Detalles en el informe técnico de la entrega.
 
