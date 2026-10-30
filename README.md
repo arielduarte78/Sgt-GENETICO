@@ -45,11 +45,26 @@ make lint             # ruff + mypy --strict
 
 - `src/kuramoto_templates/` — paquete: `domain/` (matemática pura), `evaluators/` (SDP), `cases/` (S7, C4), `search/` (GA).
 - `scripts/` — scripts que reproducen las cifras del informe (tabla de arriba).
-- `exploraciones/` — Direcciones B y C, independientes del paquete. Abrir con `uv run --with jupyter --with matplotlib jupyter notebook exploraciones/`.
-  - `codigo_direccion_B.ipynb` — cotas cuantitativas cerca de μ = 3/4.
-  - `simulacion_direccion_B.html` — página interactiva de los cuatro grupos (abrir en el navegador).
-  - `codigo_direccion_C.ipynb` — clústeres de cinco grupos no equidistantes y μ crítico.
+- `exploraciones/` — Direcciones B y C (ver abajo).
 - `runs/`, `results/` — registros y reportes de las corridas.
+
+## Direcciones B y C (exploraciones)
+
+Material de las otras dos direcciones del proyecto, independiente del paquete `kuramoto_templates`. Son notebooks reproducibles con semillas fijas; no los cubren `make test` ni `make lint`.
+
+Para abrirlos (no requieren `make env`, solo numpy/scipy/matplotlib):
+
+```bash
+uv run --with jupyter --with matplotlib --with scipy jupyter notebook exploraciones/
+```
+
+**Dirección B — cotas explícitas cerca de μ = 3/4.**
+- `codigo_direccion_B.ipynb` (numpy + matplotlib): grafica la región de parámetros de orden no descartada por la cota 2|ρ₁|² + |ρ₂|² ≤ 8δ + 16δ² para varios δ, calcula el margen δ(ε) suficiente para una tolerancia dada, y evalúa la proporción de nodos fuera de los cuatro grupos. Reproduce las figuras de la sección B del informe general.
+- `simulacion_direccion_B.html`: página interactiva autocontenida (abrir directo en el navegador, sin instalar nada). Permite mover δ, h, a y ver las constantes, la región admisible y un descenso por gradiente en el caso límite μ = 3/4.
+
+**Dirección C — estabilidad local y clústeres no equidistantes.**
+- `codigo_direccion_C.ipynb` (numpy + scipy + matplotlib, semilla 42): (1) integra el flujo gradiente para grafos de cinco grupos de tamaños (5,5,5,5,5), (5,5,5,5,6) y (5,6,5,6,5), verifica el residuo del gradiente, el menor autovalor del Hessiano y la dispersión intra-grupo; (2) partiendo de (5,5,5,5,6), agrega aristas de a una y sigue el equilibrio por homotopía hasta que el seguimiento falla, reportando μ, λ_min y el punto de detención. Reproduce la tabla y las observaciones de la sección C del informe general.
+
 
 ## Clasificación de resultados
 
