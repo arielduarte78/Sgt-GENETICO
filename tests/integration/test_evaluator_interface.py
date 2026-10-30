@@ -6,6 +6,7 @@ import pytest
 
 from kuramoto_templates.evaluators.base import Evaluator
 from kuramoto_templates.evaluators.results import EvalResult
+from kuramoto_templates.search.genome import Genome
 
 
 def test_evaluator_cannot_be_instantiated_directly() -> None:
@@ -18,7 +19,12 @@ def test_evaluator_subclass_contract() -> None:
     """Verifica que una implementación mock del evaluador respete el contrato de tipos."""
 
     class MockEvaluator(Evaluator):
-        def evaluate(self, x: tuple[float, ...], phi: tuple[float, ...]) -> EvalResult:
+        def evaluate(
+            self,
+            x: tuple[float, ...],
+            phi: tuple[float, ...],
+            genome: Genome | None = None,
+        ) -> EvalResult:
             # Simulación de resultado conforme a EvalResult
             return EvalResult(
                 f=0.6875,

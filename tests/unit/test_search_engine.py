@@ -164,7 +164,7 @@ def test_hall_of_fame_reverification_rejects_false_positive() -> None:
     """Valida que un individuo con f>0 pero falso positivo en SCS/NumPy sea rechazado del HoF."""
     import json
 
-    from kuramoto_templates.search.engine import Individual
+    from kuramoto_templates.search.selection import Individual
     from kuramoto_templates.search.genome import Genome
 
     with tempfile.TemporaryDirectory() as tmp_dir:
