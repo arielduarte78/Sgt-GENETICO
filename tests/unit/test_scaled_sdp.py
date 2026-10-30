@@ -14,7 +14,7 @@ from __future__ import annotations
 import math
 
 import numpy as np
-import scipy.linalg
+import scipy.linalg  # type: ignore[import-untyped]
 
 from kuramoto_templates.cases.s7 import get_s7_appendix_a_template, get_s7_template
 from kuramoto_templates.domain.conditions import (
@@ -51,6 +51,7 @@ def test_t2_base_t_properties_and_coverage() -> None:
     assert 1e-4 <= h_eff <= 0.1
 
     T = build_scaled_basis_t(x, phi, sheets, ref_sheet, h_eff)
+    assert T is not None
     assert T.shape == (m, m - 1)
 
     # rank(T) == m - 1
@@ -85,6 +86,7 @@ def test_t1_sylvester_inertia_equivalence_200_random_p() -> None:
     sheets, ref_sheet = compute_sheets(x, phi, genome=None, K_ref=4, sheet_tol=0.2)
     h_eff = compute_h_eff(x, phi, sheets)
     T = build_scaled_basis_t(x, phi, sheets, ref_sheet, h_eff)
+    assert T is not None
 
     Q = scipy.linalg.null_space(np.ones((1, m)))
 
@@ -99,7 +101,7 @@ def test_t1_sylvester_inertia_equivalence_200_random_p() -> None:
             p[mask] = 0.0
         elif idx < 100:
             # Matrices con entradas extremas o alternadas
-            p = rng.choice([0.0, 0.01, 0.5, 0.99, 1.0], size=K)
+            p = np.array(rng.choice([0.0, 0.01, 0.5, 0.99, 1.0], size=K), dtype=float)
         else:
             p = rng.uniform(0.0, 1.0, size=K)
 
@@ -363,7 +365,7 @@ def test_t9_scale_incompatibility_penalty_s7_beats_c4_at_frontier() -> None:
 
 
 def test_verify_solution_scaled_threshold() -> None:
-    """Demuestra que lam_min(M) ~ 1e-9 falla verify_solution sin h_eff, pero pasa con h_eff = 1e-3."""
+    """lam_min(M) ~ 1e-9 falla verify_solution sin h_eff, pero pasa con h_eff = 1e-3."""
     from kuramoto_templates.cases.s7 import get_s7_appendix_a_template
     from kuramoto_templates.domain.conditions import verify_solution
 
@@ -380,7 +382,7 @@ def test_verify_solution_scaled_threshold() -> None:
     assert 1e-10 < v_unscaled["min_eig_M"] < 1e-6
     assert any("Margen espectral insuficiente" in r for r in v_unscaled["reasons"])
 
-    # 2. Con h_eff = 1e-3 (eps_efectivo = 1e-6 * (1e-3)^2 = 1e-12): lam_min(M) ~ 4.48e-9 > 1e-12 -> Pasa
+    # 2. Con h_eff = 1e-3 (eps_efectivo = 1e-6 * 1e-6 = 1e-12): lam_min(M) > 1e-12 -> Pasa
     v_scaled = verify_solution(s7.x, s7.phi, res.P, h_eff=1e-3)
     assert v_scaled["is_valid"]
     assert len(v_scaled["reasons"]) == 0

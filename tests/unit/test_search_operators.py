@@ -1,6 +1,7 @@
 """Property-based tests with Hypothesis for search genetic operators."""
 
 import math
+from typing import Any
 
 import numpy as np
 from hypothesis import given, settings
@@ -233,12 +234,12 @@ def test_operator_dispatcher_uses_single_rng_choice() -> None:
 
     class TrackingRNG:
         def __init__(self, base: np.random.Generator) -> None:
-            self._base = base
+            self._base: Any = base
             self.choice_calls = 0
 
         def choice(self, *args: object, **kwargs: object) -> object:
             self.choice_calls += 1
-            return getattr(self._base, "choice")(*args, **kwargs)
+            return self._base.choice(*args, **kwargs)
 
         def __getattr__(self, item: str) -> object:
             return getattr(self._base, item)

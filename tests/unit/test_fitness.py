@@ -119,7 +119,7 @@ def test_id_39260_float64_phenotype_yields_negative_fitness() -> None:
 
 
 def test_ordered_fitness_s7_beats_unstable_small_slack() -> None:
-    """Test requerido: S7 (s*=1.8e-3, lam_hat>0) debe tener f mayor que un estado con lam_hat=-0.33 y s*=1e-8."""
+    """S7 (s*=1.8e-3, lam_hat>0) debe tener f mayor que un estado con lam_hat=-0.33 y s*=1e-8."""
     tol = 1e-8
     lam_floor_hat = 1e-5
 
@@ -132,7 +132,9 @@ def test_ordered_fitness_s7_beats_unstable_small_slack() -> None:
     # Estado inestable con slack ínfimo: lam_hat = -0.33 < lam_floor_hat, s* = 1e-8
     s_unstable = 1e-8
     lam_unstable = -0.33
-    f_unstable = compute_continuous_fitness(lam=lam_unstable, s=s_unstable, tol=tol, lam_floor=lam_floor_hat)
+    f_unstable = compute_continuous_fitness(
+        lam=lam_unstable, s=s_unstable, tol=tol, lam_floor=lam_floor_hat
+    )
     assert math.isclose(f_unstable, -1.0 + (-0.33), abs_tol=1e-9)  # -1.33
 
     # S7 debe superar al inestable SIEMPRE

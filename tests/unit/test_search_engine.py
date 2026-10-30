@@ -1,7 +1,8 @@
 """Unit and deterministic reproduction tests for GA search engine."""
 
-from pathlib import Path
 import tempfile
+from pathlib import Path
+
 import pytest
 
 from kuramoto_templates.evaluators.results import EvalResult
@@ -134,9 +135,11 @@ def test_engine_bit_for_bit_checkpoint_resume_identity() -> None:
         assert state_full.next_individual_id == state_resumed.next_individual_id
 
         # Verify island populations have exact identical genetic contents
-        for pop_f, pop_r in zip(state_full.island_populations, state_resumed.island_populations):
+        for pop_f, pop_r in zip(
+            state_full.island_populations, state_resumed.island_populations, strict=False
+        ):
             assert len(pop_f) == len(pop_r)
-            for ind_f, ind_r in zip(pop_f, pop_r):
+            for ind_f, ind_r in zip(pop_f, pop_r, strict=False):
                 assert ind_f["id"] == ind_r["id"]
                 assert ind_f["genome"] == ind_r["genome"]
                 assert ind_f["phenotype_x"] == ind_r["phenotype_x"]
@@ -149,7 +152,9 @@ def test_engine_bit_for_bit_checkpoint_resume_identity() -> None:
 
         # Verify Hall of Fame bit-for-bit
         assert len(state_full.hall_of_fame_global) == len(state_resumed.hall_of_fame_global)
-        for hof_f, hof_r in zip(state_full.hall_of_fame_global, state_resumed.hall_of_fame_global):
+        for hof_f, hof_r in zip(
+            state_full.hall_of_fame_global, state_resumed.hall_of_fame_global, strict=False
+        ):
             assert hof_f["id"] == hof_r["id"]
             assert hof_f["genome"] == hof_r["genome"]
             assert hof_f["f"] == pytest.approx(hof_r["f"])
@@ -158,8 +163,9 @@ def test_engine_bit_for_bit_checkpoint_resume_identity() -> None:
 def test_hall_of_fame_reverification_rejects_false_positive() -> None:
     """Valida que un individuo con f>0 pero falso positivo en SCS/NumPy sea rechazado del HoF."""
     import json
-    from kuramoto_templates.search.genome import Genome
+
     from kuramoto_templates.search.engine import Individual
+    from kuramoto_templates.search.genome import Genome
 
     with tempfile.TemporaryDirectory() as tmp_dir:
         cfg = GAConfig(
@@ -178,7 +184,14 @@ def test_hall_of_fame_reverification_rejects_false_positive() -> None:
         # Crear un individuo artificial con f > 0 pretendiendo entrar al HoF
         fake_ind = Individual(
             id=999,
-            genome=Genome(m=4, K_ref=4, k=(0, 0, 0, 0), sgn=(1, 1, 1, 1), ell=(-2.0, -2.0, -2.0, -2.0), u=(0.0, 0.0, 0.0, 0.0)),
+            genome=Genome(
+                m=4,
+                K_ref=4,
+                k=(0, 0, 0, 0),
+                sgn=(1, 1, 1, 1),
+                ell=(-2.0, -2.0, -2.0, -2.0),
+                u=(0.0, 0.0, 0.0, 0.0),
+            ),
             phenotype_x=x,
             phenotype_phi=phi,
             s_star=0.0,
@@ -194,7 +207,9 @@ def test_hall_of_fame_reverification_rejects_false_positive() -> None:
         engine._update_hall_of_fame(fake_ind)
 
         # Debe ser rechazado del HoF global y por m
-        assert len(engine.hall_of_fame_global) == 0 or all(ind.id != 999 for ind in engine.hall_of_fame_global)
+        assert len(engine.hall_of_fame_global) == 0 or all(
+            ind.id != 999 for ind in engine.hall_of_fame_global
+        )
         assert 4 not in engine.hall_of_fame_per_m or engine.hall_of_fame_per_m[4].id != 999
 
         # Debe haberse registrado en run.jsonl como falso_positivo

@@ -15,7 +15,7 @@ from pathlib import Path
 
 
 def _get_imports_from_file(file_path: Path) -> list[str]:
-    """Extrae todos los módulos importados en runtime en un archivo .py mediante AST (ignorando TYPE_CHECKING)."""
+    """Extrae módulos en runtime mediante AST (ignorando TYPE_CHECKING)."""
     tree = ast.parse(file_path.read_text(encoding="utf-8"), filename=str(file_path))
 
     class RuntimeImportVisitor(ast.NodeVisitor):
@@ -23,7 +23,7 @@ def _get_imports_from_file(file_path: Path) -> list[str]:
             self.imports: list[str] = []
 
         def visit_If(self, node: ast.If) -> None:
-            # Ignorar bloques 'if TYPE_CHECKING:' (son tipos estáticos puros, sin dependencia en runtime)
+            # Ignorar bloques 'if TYPE_CHECKING:' (tipos estáticos, sin dependencia en runtime)
             if isinstance(node.test, ast.Name) and node.test.id == "TYPE_CHECKING":
                 return
             if isinstance(node.test, ast.Attribute) and node.test.attr == "TYPE_CHECKING":

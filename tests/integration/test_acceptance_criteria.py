@@ -1,9 +1,8 @@
 """Acceptance criteria tests (c), (d), and (e) using real SDPEvaluator."""
 
 import json
-from pathlib import Path
 import tempfile
-import pytest
+from pathlib import Path
 
 from kuramoto_templates.evaluators.config import EvalConfig
 from kuramoto_templates.evaluators.fitness import compute_continuous_fitness
@@ -53,7 +52,7 @@ def test_acceptance_c_seeds_monotonic_improvement() -> None:
 
         best_final = results["best_f"]
 
-        print(f"\nACCEPTANCE TEST (c) RESULTS:")
+        print("\nACCEPTANCE TEST (c) RESULTS:")
         print(f"  f_seed (S7): {f_seed:.12e}")
         print(f"  best_final:  {best_final:.12e}")
         print(f"  evals_count: {results['total_evaluations']}")
@@ -90,9 +89,9 @@ def test_acceptance_d_no_blocking_no_seeds_report() -> None:
         best_f = results["best_f"]
         reached_f_positive = best_f > 0.0
 
-        print(f"\nACCEPTANCE TEST (d) [NON-BLOCKING REPORT]:")
-        print(f"  mu_t: 0.690")
-        print(f"  no_seeds: True")
+        print("\nACCEPTANCE TEST (d) [NON-BLOCKING REPORT]:")
+        print("  mu_t: 0.690")
+        print("  no_seeds: True")
         print(f"  reached f > 0: {reached_f_positive}")
         print(f"  best_f achieved: {best_f:.12e}")
         print(f"  best_lam: {results['best_lam']:.12e}")
@@ -148,7 +147,7 @@ def test_acceptance_e_smoke_run_real_evaluator() -> None:
             cp_data = json.load(f)
         assert cp_data["generation"] == 3
 
-        print(f"\nACCEPTANCE TEST (e) SMOKE RUN METRICS:")
+        print("\nACCEPTANCE TEST (e) SMOKE RUN METRICS:")
         print(f"  total evaluations: {results['total_evaluations']}")
         print(f"  cache hits: {results['cache_hits']}")
         print(f"  mean evaluation time: {mean_eval_time:.4f} s / eval")
